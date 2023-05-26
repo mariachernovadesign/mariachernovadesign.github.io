@@ -1167,278 +1167,64 @@
     }
   });
 
-  // shared/render/plugins/BaseSiteModules/webflow-scroll.js
-  var require_webflow_scroll = __commonJS({
-    "shared/render/plugins/BaseSiteModules/webflow-scroll.js"(exports, module) {
+  // shared/render/plugins/BaseSiteModules/webflow-brand.js
+  var require_webflow_brand = __commonJS({
+    "shared/render/plugins/BaseSiteModules/webflow-brand.js"(exports, module) {
       var Webflow = require_webflow_lib();
-      Webflow.define("scroll", module.exports = function($) {
-        var NS_EVENTS = {
-          WF_CLICK_EMPTY: "click.wf-empty-link",
-          WF_CLICK_SCROLL: "click.wf-scroll"
-        };
-        var loc = window.location;
-        var history = inIframe() ? null : window.history;
-        var $win = $(window);
-        var $doc = $(document);
-        var $body = $(document.body);
-        var animate = window.requestAnimationFrame || window.mozRequestAnimationFrame || window.webkitRequestAnimationFrame || function(fn) {
-          window.setTimeout(fn, 15);
-        };
-        var rootTag = Webflow.env("editor") ? ".w-editor-body" : "body";
-        var headerSelector = "header, " + rootTag + " > .header, " + rootTag + " > .w-nav:not([data-no-scroll])";
-        var emptyHrefSelector = 'a[href="#"]';
-        var localHrefSelector = 'a[href*="#"]:not(.w-tab-link):not(' + emptyHrefSelector + ")";
-        var scrollTargetOutlineCSS = '.wf-force-outline-none[tabindex="-1"]:focus{outline:none;}';
-        var focusStylesEl = document.createElement("style");
-        focusStylesEl.appendChild(document.createTextNode(scrollTargetOutlineCSS));
-        function inIframe() {
-          try {
-            return Boolean(window.frameElement);
-          } catch (e) {
-            return true;
-          }
-        }
-        var validHash = /^#[a-zA-Z0-9][\w:.-]*$/;
-        function linksToCurrentPage(link) {
-          return validHash.test(link.hash) && link.host + link.pathname === loc.host + loc.pathname;
-        }
-        const reducedMotionMediaQuery = typeof window.matchMedia === "function" && window.matchMedia("(prefers-reduced-motion: reduce)");
-        function reducedMotionEnabled() {
-          return document.body.getAttribute("data-wf-scroll-motion") === "none" || reducedMotionMediaQuery.matches;
-        }
-        function setFocusable($el, action) {
-          var initialTabindex;
-          switch (action) {
-            case "add":
-              initialTabindex = $el.attr("tabindex");
-              if (initialTabindex) {
-                $el.attr("data-wf-tabindex-swap", initialTabindex);
-              } else {
-                $el.attr("tabindex", "-1");
-              }
-              break;
-            case "remove":
-              initialTabindex = $el.attr("data-wf-tabindex-swap");
-              if (initialTabindex) {
-                $el.attr("tabindex", initialTabindex);
-                $el.removeAttr("data-wf-tabindex-swap");
-              } else {
-                $el.removeAttr("tabindex");
-              }
-              break;
-          }
-          $el.toggleClass("wf-force-outline-none", action === "add");
-        }
-        function validateScroll(evt) {
-          var target = evt.currentTarget;
-          if (
-            // Bail if in Designer
-            Webflow.env("design") || // Ignore links being used by jQuery mobile
-            window.$.mobile && /(?:^|\s)ui-link(?:$|\s)/.test(target.className)
-          ) {
-            return;
-          }
-          var hash = linksToCurrentPage(target) ? target.hash : "";
-          if (hash === "")
-            return;
-          var $el = $(hash);
-          if (!$el.length) {
-            return;
-          }
-          if (evt) {
-            evt.preventDefault();
-            evt.stopPropagation();
-          }
-          updateHistory(hash, evt);
-          window.setTimeout(function() {
-            scroll($el, function setFocus() {
-              setFocusable($el, "add");
-              $el.get(0).focus({
-                preventScroll: true
-              });
-              setFocusable($el, "remove");
-            });
-          }, evt ? 0 : 300);
-        }
-        function updateHistory(hash) {
-          if (loc.hash !== hash && history && history.pushState && // Navigation breaks Chrome when the protocol is `file:`.
-          !(Webflow.env.chrome && loc.protocol === "file:")) {
-            var oldHash = history.state && history.state.hash;
-            if (oldHash !== hash) {
-              history.pushState({
-                hash
-              }, "", hash);
-            }
-          }
-        }
-        function scroll($targetEl, cb) {
-          var start = $win.scrollTop();
-          var end = calculateScrollEndPosition($targetEl);
-          if (start === end)
-            return;
-          var duration = calculateScrollDuration($targetEl, start, end);
-          var clock = Date.now();
-          var step = function() {
-            var elapsed = Date.now() - clock;
-            window.scroll(0, getY(start, end, elapsed, duration));
-            if (elapsed <= duration) {
-              animate(step);
-            } else if (typeof cb === "function") {
-              cb();
-            }
-          };
-          animate(step);
-        }
-        function calculateScrollEndPosition($targetEl) {
-          var $header = $(headerSelector);
-          var offsetY = $header.css("position") === "fixed" ? $header.outerHeight() : 0;
-          var end = $targetEl.offset().top - offsetY;
-          if ($targetEl.data("scroll") === "mid") {
-            var available = $win.height() - offsetY;
-            var elHeight = $targetEl.outerHeight();
-            if (elHeight < available) {
-              end -= Math.round((available - elHeight) / 2);
-            }
-          }
-          return end;
-        }
-        function calculateScrollDuration($targetEl, start, end) {
-          if (reducedMotionEnabled())
-            return 0;
-          var mult = 1;
-          $body.add($targetEl).each(function(_, el) {
-            var time = parseFloat(el.getAttribute("data-scroll-time"));
-            if (!isNaN(time) && time >= 0) {
-              mult = time;
-            }
-          });
-          return (472.143 * Math.log(Math.abs(start - end) + 125) - 2e3) * mult;
-        }
-        function getY(start, end, elapsed, duration) {
-          if (elapsed > duration) {
-            return end;
-          }
-          return start + (end - start) * ease(elapsed / duration);
-        }
-        function ease(t) {
-          return t < 0.5 ? 4 * t * t * t : (t - 1) * (2 * t - 2) * (2 * t - 2) + 1;
-        }
-        function ready() {
-          var {
-            WF_CLICK_EMPTY,
-            WF_CLICK_SCROLL
-          } = NS_EVENTS;
-          $doc.on(WF_CLICK_SCROLL, localHrefSelector, validateScroll);
-          $doc.on(WF_CLICK_EMPTY, emptyHrefSelector, function(e) {
-            e.preventDefault();
-          });
-          document.head.insertBefore(focusStylesEl, document.head.firstChild);
-        }
-        return {
-          ready
-        };
-      });
-    }
-  });
-
-  // shared/render/plugins/BaseSiteModules/webflow-touch.js
-  var require_webflow_touch = __commonJS({
-    "shared/render/plugins/BaseSiteModules/webflow-touch.js"(exports, module) {
-      var Webflow = require_webflow_lib();
-      Webflow.define("touch", module.exports = function($) {
+      Webflow.define("brand", module.exports = function($) {
         var api = {};
-        var getSelection = window.getSelection;
-        $.event.special.tap = {
-          bindType: "click",
-          delegateType: "click"
+        var doc = document;
+        var $html = $("html");
+        var $body = $("body");
+        var namespace = ".w-webflow-badge";
+        var location = window.location;
+        var isPhantom = /PhantomJS/i.test(navigator.userAgent);
+        var fullScreenEvents = "fullscreenchange webkitfullscreenchange mozfullscreenchange msfullscreenchange";
+        var brandElement;
+        api.ready = function() {
+          var shouldBrand = $html.attr("data-wf-status");
+          var publishedDomain = $html.attr("data-wf-domain") || "";
+          if (/\.webflow\.io$/i.test(publishedDomain) && location.hostname !== publishedDomain) {
+            shouldBrand = true;
+          }
+          if (shouldBrand && !isPhantom) {
+            brandElement = brandElement || createBadge();
+            ensureBrand();
+            setTimeout(ensureBrand, 500);
+            $(doc).off(fullScreenEvents, onFullScreenChange).on(fullScreenEvents, onFullScreenChange);
+          }
         };
-        api.init = function(el) {
-          el = typeof el === "string" ? $(el).get(0) : el;
-          return el ? new Touch(el) : null;
-        };
-        function Touch(el) {
-          var active = false;
-          var useTouch = false;
-          var thresholdX = Math.min(Math.round(window.innerWidth * 0.04), 40);
-          var startX;
-          var lastX;
-          el.addEventListener("touchstart", start, false);
-          el.addEventListener("touchmove", move, false);
-          el.addEventListener("touchend", end, false);
-          el.addEventListener("touchcancel", cancel, false);
-          el.addEventListener("mousedown", start, false);
-          el.addEventListener("mousemove", move, false);
-          el.addEventListener("mouseup", end, false);
-          el.addEventListener("mouseout", cancel, false);
-          function start(evt) {
-            var touches = evt.touches;
-            if (touches && touches.length > 1) {
-              return;
-            }
-            active = true;
-            if (touches) {
-              useTouch = true;
-              startX = touches[0].clientX;
-            } else {
-              startX = evt.clientX;
-            }
-            lastX = startX;
-          }
-          function move(evt) {
-            if (!active) {
-              return;
-            }
-            if (useTouch && evt.type === "mousemove") {
-              evt.preventDefault();
-              evt.stopPropagation();
-              return;
-            }
-            var touches = evt.touches;
-            var x = touches ? touches[0].clientX : evt.clientX;
-            var velocityX = x - lastX;
-            lastX = x;
-            if (Math.abs(velocityX) > thresholdX && getSelection && String(getSelection()) === "") {
-              triggerEvent("swipe", evt, {
-                direction: velocityX > 0 ? "right" : "left"
-              });
-              cancel();
-            }
-          }
-          function end(evt) {
-            if (!active) {
-              return;
-            }
-            active = false;
-            if (useTouch && evt.type === "mouseup") {
-              evt.preventDefault();
-              evt.stopPropagation();
-              useTouch = false;
-              return;
-            }
-          }
-          function cancel() {
-            active = false;
-          }
-          function destroy() {
-            el.removeEventListener("touchstart", start, false);
-            el.removeEventListener("touchmove", move, false);
-            el.removeEventListener("touchend", end, false);
-            el.removeEventListener("touchcancel", cancel, false);
-            el.removeEventListener("mousedown", start, false);
-            el.removeEventListener("mousemove", move, false);
-            el.removeEventListener("mouseup", end, false);
-            el.removeEventListener("mouseout", cancel, false);
-            el = null;
-          }
-          this.destroy = destroy;
+        function onFullScreenChange() {
+          var fullScreen = doc.fullScreen || doc.mozFullScreen || doc.webkitIsFullScreen || doc.msFullscreenElement || Boolean(doc.webkitFullscreenElement);
+          $(brandElement).attr("style", fullScreen ? "display: none !important;" : "");
         }
-        function triggerEvent(type, evt, data) {
-          var newEvent = $.Event(type, {
-            originalEvent: evt
+        function createBadge() {
+          var $brand = $('<a class="w-webflow-badge"></a>').attr("href", "https://webflow.com?utm_campaign=brandjs");
+          var $logoArt = $("<img>").attr("src", "https://d3e54v103j8qbb.cloudfront.net/img/webflow-badge-icon.f67cd735e3.svg").attr("alt", "").css({
+            marginRight: "8px",
+            width: "16px"
           });
-          $(evt.target).trigger(newEvent, data);
+          var $logoText = $("<img>").attr("src", "https://d1otoma47x30pg.cloudfront.net/img/webflow-badge-text.6faa6a38cd.svg").attr("alt", "Made in Webflow");
+          $brand.append($logoArt, $logoText);
+          return $brand[0];
         }
-        api.instance = api.init(document);
+        function ensureBrand() {
+          var found = $body.children(namespace);
+          var match = found.length && found.get(0) === brandElement;
+          var inEditor = Webflow.env("editor");
+          if (match) {
+            if (inEditor) {
+              found.remove();
+            }
+            return;
+          }
+          if (found.length) {
+            found.remove();
+          }
+          if (!inEditor) {
+            $body.append(brandElement);
+          }
+        }
         return api;
       });
     }
@@ -1595,94 +1381,6 @@
     }
   });
 
-  // shared/render/plugins/BaseSiteModules/webflow-links.js
-  var require_webflow_links = __commonJS({
-    "shared/render/plugins/BaseSiteModules/webflow-links.js"(exports, module) {
-      var Webflow = require_webflow_lib();
-      Webflow.define("links", module.exports = function($, _) {
-        var api = {};
-        var $win = $(window);
-        var designer;
-        var inApp = Webflow.env();
-        var location = window.location;
-        var tempLink = document.createElement("a");
-        var linkCurrent = "w--current";
-        var indexPage = /index\.(html|php)$/;
-        var dirList = /\/$/;
-        var anchors;
-        var slug;
-        api.ready = api.design = api.preview = init;
-        function init() {
-          designer = inApp && Webflow.env("design");
-          slug = Webflow.env("slug") || location.pathname || "";
-          Webflow.scroll.off(scroll);
-          anchors = [];
-          var links = document.links;
-          for (var i = 0; i < links.length; ++i) {
-            select(links[i]);
-          }
-          if (anchors.length) {
-            Webflow.scroll.on(scroll);
-            scroll();
-          }
-        }
-        function select(link) {
-          var href = designer && link.getAttribute("href-disabled") || link.getAttribute("href");
-          tempLink.href = href;
-          if (href.indexOf(":") >= 0) {
-            return;
-          }
-          var $link = $(link);
-          if (tempLink.hash.length > 1 && tempLink.host + tempLink.pathname === location.host + location.pathname) {
-            if (!/^#[a-zA-Z0-9\-\_]+$/.test(tempLink.hash)) {
-              return;
-            }
-            var $section = $(tempLink.hash);
-            $section.length && anchors.push({
-              link: $link,
-              sec: $section,
-              active: false
-            });
-            return;
-          }
-          if (href === "#" || href === "") {
-            return;
-          }
-          var match = tempLink.href === location.href || href === slug || indexPage.test(href) && dirList.test(slug);
-          setClass($link, linkCurrent, match);
-        }
-        function scroll() {
-          var viewTop = $win.scrollTop();
-          var viewHeight = $win.height();
-          _.each(anchors, function(anchor) {
-            var $link = anchor.link;
-            var $section = anchor.sec;
-            var top = $section.offset().top;
-            var height = $section.outerHeight();
-            var offset = viewHeight * 0.5;
-            var active = $section.is(":visible") && top + height - offset >= viewTop && top + offset <= viewTop + viewHeight;
-            if (anchor.active === active) {
-              return;
-            }
-            anchor.active = active;
-            setClass($link, linkCurrent, active);
-          });
-        }
-        function setClass($elem, className, add) {
-          var exists = $elem.hasClass(className);
-          if (add && exists) {
-            return;
-          }
-          if (!add && !exists) {
-            return;
-          }
-          add ? $elem.addClass(className) : $elem.removeClass(className);
-        }
-        return api;
-      });
-    }
-  });
-
   // shared/render/plugins/BaseSiteModules/webflow-focus.js
   var require_webflow_focus = __commonJS({
     "shared/render/plugins/BaseSiteModules/webflow-focus.js"(exports, module) {
@@ -1825,586 +1523,6 @@
       };
       $.extend(api.triggers, eventTriggers);
       module.exports = api;
-    }
-  });
-
-  // shared/render/plugins/BaseSiteModules/webflow-focus-within.js
-  var require_webflow_focus_within = __commonJS({
-    "shared/render/plugins/BaseSiteModules/webflow-focus-within.js"(exports, module) {
-      var Webflow = require_webflow_lib();
-      Webflow.define("focus-within", module.exports = function() {
-        function computeEventPath(node) {
-          var path = [node];
-          var parent = null;
-          while (parent = node.parentNode || node.host || node.defaultView) {
-            path.push(parent);
-            node = parent;
-          }
-          return path;
-        }
-        function addFocusWithinAttribute(el) {
-          if (typeof el.getAttribute !== "function" || el.getAttribute("data-wf-focus-within")) {
-            return;
-          }
-          el.setAttribute("data-wf-focus-within", "true");
-        }
-        function removeFocusWithinAttribute(el) {
-          if (typeof el.getAttribute !== "function" || !el.getAttribute("data-wf-focus-within")) {
-            return;
-          }
-          el.removeAttribute("data-wf-focus-within");
-        }
-        function loadFocusWithinPolyfill() {
-          var handler = function(e) {
-            var running;
-            function action() {
-              running = false;
-              if ("blur" === e.type) {
-                Array.prototype.slice.call(computeEventPath(e.target)).forEach(removeFocusWithinAttribute);
-              }
-              if ("focus" === e.type) {
-                Array.prototype.slice.call(computeEventPath(e.target)).forEach(addFocusWithinAttribute);
-              }
-            }
-            if (!running) {
-              window.requestAnimationFrame(action);
-              running = true;
-            }
-          };
-          document.addEventListener("focus", handler, true);
-          document.addEventListener("blur", handler, true);
-          addFocusWithinAttribute(document.body);
-          return true;
-        }
-        function ready() {
-          if (typeof document !== "undefined" && document.body.hasAttribute("data-wf-focus-within")) {
-            try {
-              document.querySelector(":focus-within");
-            } catch (e) {
-              loadFocusWithinPolyfill();
-            }
-          }
-        }
-        return {
-          ready
-        };
-      });
-    }
-  });
-
-  // shared/render/plugins/BaseSiteModules/webflow-brand.js
-  var require_webflow_brand = __commonJS({
-    "shared/render/plugins/BaseSiteModules/webflow-brand.js"(exports, module) {
-      var Webflow = require_webflow_lib();
-      Webflow.define("brand", module.exports = function($) {
-        var api = {};
-        var doc = document;
-        var $html = $("html");
-        var $body = $("body");
-        var namespace = ".w-webflow-badge";
-        var location = window.location;
-        var isPhantom = /PhantomJS/i.test(navigator.userAgent);
-        var fullScreenEvents = "fullscreenchange webkitfullscreenchange mozfullscreenchange msfullscreenchange";
-        var brandElement;
-        api.ready = function() {
-          var shouldBrand = $html.attr("data-wf-status");
-          var publishedDomain = $html.attr("data-wf-domain") || "";
-          if (/\.webflow\.io$/i.test(publishedDomain) && location.hostname !== publishedDomain) {
-            shouldBrand = true;
-          }
-          if (shouldBrand && !isPhantom) {
-            brandElement = brandElement || createBadge();
-            ensureBrand();
-            setTimeout(ensureBrand, 500);
-            $(doc).off(fullScreenEvents, onFullScreenChange).on(fullScreenEvents, onFullScreenChange);
-          }
-        };
-        function onFullScreenChange() {
-          var fullScreen = doc.fullScreen || doc.mozFullScreen || doc.webkitIsFullScreen || doc.msFullscreenElement || Boolean(doc.webkitFullscreenElement);
-          $(brandElement).attr("style", fullScreen ? "display: none !important;" : "");
-        }
-        function createBadge() {
-          var $brand = $('<a class="w-webflow-badge"></a>').attr("href", "https://webflow.com?utm_campaign=brandjs");
-          var $logoArt = $("<img>").attr("src", "https://d3e54v103j8qbb.cloudfront.net/img/webflow-badge-icon.f67cd735e3.svg").attr("alt", "").css({
-            marginRight: "8px",
-            width: "16px"
-          });
-          var $logoText = $("<img>").attr("src", "https://d1otoma47x30pg.cloudfront.net/img/webflow-badge-text.6faa6a38cd.svg").attr("alt", "Made in Webflow");
-          $brand.append($logoArt, $logoText);
-          return $brand[0];
-        }
-        function ensureBrand() {
-          var found = $body.children(namespace);
-          var match = found.length && found.get(0) === brandElement;
-          var inEditor = Webflow.env("editor");
-          if (match) {
-            if (inEditor) {
-              found.remove();
-            }
-            return;
-          }
-          if (found.length) {
-            found.remove();
-          }
-          if (!inEditor) {
-            $body.append(brandElement);
-          }
-        }
-        return api;
-      });
-    }
-  });
-
-  // shared/render/plugins/Navbar/webflow-navbar.js
-  var require_webflow_navbar = __commonJS({
-    "shared/render/plugins/Navbar/webflow-navbar.js"(exports, module) {
-      var Webflow = require_webflow_lib();
-      var IXEvents = require_webflow_ix2_events();
-      var KEY_CODES = {
-        ARROW_LEFT: 37,
-        ARROW_UP: 38,
-        ARROW_RIGHT: 39,
-        ARROW_DOWN: 40,
-        ESCAPE: 27,
-        SPACE: 32,
-        ENTER: 13,
-        HOME: 36,
-        END: 35
-      };
-      Webflow.define("navbar", module.exports = function($, _) {
-        var api = {};
-        var tram = $.tram;
-        var $win = $(window);
-        var $doc = $(document);
-        var debounce = _.debounce;
-        var $body;
-        var $navbars;
-        var designer;
-        var inEditor;
-        var inApp = Webflow.env();
-        var overlay = '<div class="w-nav-overlay" data-wf-ignore />';
-        var namespace = ".w-nav";
-        var navbarOpenedButton = "w--open";
-        var navbarOpenedDropdown = "w--nav-dropdown-open";
-        var navbarOpenedDropdownToggle = "w--nav-dropdown-toggle-open";
-        var navbarOpenedDropdownList = "w--nav-dropdown-list-open";
-        var navbarOpenedLink = "w--nav-link-open";
-        var ix = IXEvents.triggers;
-        var menuSibling = $();
-        api.ready = api.design = api.preview = init;
-        api.destroy = function() {
-          menuSibling = $();
-          removeListeners();
-          if ($navbars && $navbars.length) {
-            $navbars.each(teardown);
-          }
-        };
-        function init() {
-          designer = inApp && Webflow.env("design");
-          inEditor = Webflow.env("editor");
-          $body = $(document.body);
-          $navbars = $doc.find(namespace);
-          if (!$navbars.length) {
-            return;
-          }
-          $navbars.each(build);
-          removeListeners();
-          addListeners();
-        }
-        function removeListeners() {
-          Webflow.resize.off(resizeAll);
-        }
-        function addListeners() {
-          Webflow.resize.on(resizeAll);
-        }
-        function resizeAll() {
-          $navbars.each(resize);
-        }
-        function build(i, el) {
-          var $el = $(el);
-          var data = $.data(el, namespace);
-          if (!data) {
-            data = $.data(el, namespace, {
-              open: false,
-              el: $el,
-              config: {},
-              selectedIdx: -1
-            });
-          }
-          data.menu = $el.find(".w-nav-menu");
-          data.links = data.menu.find(".w-nav-link");
-          data.dropdowns = data.menu.find(".w-dropdown");
-          data.dropdownToggle = data.menu.find(".w-dropdown-toggle");
-          data.dropdownList = data.menu.find(".w-dropdown-list");
-          data.button = $el.find(".w-nav-button");
-          data.container = $el.find(".w-container");
-          data.overlayContainerId = "w-nav-overlay-" + i;
-          data.outside = outside(data);
-          var navBrandLink = $el.find(".w-nav-brand");
-          if (navBrandLink && navBrandLink.attr("href") === "/" && navBrandLink.attr("aria-label") == null) {
-            navBrandLink.attr("aria-label", "home");
-          }
-          data.button.attr("style", "-webkit-user-select: text;");
-          if (data.button.attr("aria-label") == null) {
-            data.button.attr("aria-label", "menu");
-          }
-          data.button.attr("role", "button");
-          data.button.attr("tabindex", "0");
-          data.button.attr("aria-controls", data.overlayContainerId);
-          data.button.attr("aria-haspopup", "menu");
-          data.button.attr("aria-expanded", "false");
-          data.el.off(namespace);
-          data.button.off(namespace);
-          data.menu.off(namespace);
-          configure(data);
-          if (designer) {
-            removeOverlay(data);
-            data.el.on("setting" + namespace, handler(data));
-          } else {
-            addOverlay(data);
-            data.button.on("click" + namespace, toggle(data));
-            data.menu.on("click" + namespace, "a", navigate(data));
-            data.button.on("keydown" + namespace, makeToggleButtonKeyboardHandler(data));
-            data.el.on("keydown" + namespace, makeLinksKeyboardHandler(data));
-          }
-          resize(i, el);
-        }
-        function teardown(i, el) {
-          var data = $.data(el, namespace);
-          if (data) {
-            removeOverlay(data);
-            $.removeData(el, namespace);
-          }
-        }
-        function removeOverlay(data) {
-          if (!data.overlay) {
-            return;
-          }
-          close(data, true);
-          data.overlay.remove();
-          data.overlay = null;
-        }
-        function addOverlay(data) {
-          if (data.overlay) {
-            return;
-          }
-          data.overlay = $(overlay).appendTo(data.el);
-          data.overlay.attr("id", data.overlayContainerId);
-          data.parent = data.menu.parent();
-          close(data, true);
-        }
-        function configure(data) {
-          var config = {};
-          var old = data.config || {};
-          var animation = config.animation = data.el.attr("data-animation") || "default";
-          config.animOver = /^over/.test(animation);
-          config.animDirect = /left$/.test(animation) ? -1 : 1;
-          if (old.animation !== animation) {
-            data.open && _.defer(reopen, data);
-          }
-          config.easing = data.el.attr("data-easing") || "ease";
-          config.easing2 = data.el.attr("data-easing2") || "ease";
-          var duration = data.el.attr("data-duration");
-          config.duration = duration != null ? Number(duration) : 400;
-          config.docHeight = data.el.attr("data-doc-height");
-          data.config = config;
-        }
-        function handler(data) {
-          return function(evt, options) {
-            options = options || {};
-            var winWidth = $win.width();
-            configure(data);
-            options.open === true && open(data, true);
-            options.open === false && close(data, true);
-            data.open && _.defer(function() {
-              if (winWidth !== $win.width()) {
-                reopen(data);
-              }
-            });
-          };
-        }
-        function makeToggleButtonKeyboardHandler(data) {
-          return function(evt) {
-            switch (evt.keyCode) {
-              case KEY_CODES.SPACE:
-              case KEY_CODES.ENTER: {
-                toggle(data)();
-                evt.preventDefault();
-                return evt.stopPropagation();
-              }
-              case KEY_CODES.ESCAPE: {
-                close(data);
-                evt.preventDefault();
-                return evt.stopPropagation();
-              }
-              case KEY_CODES.ARROW_RIGHT:
-              case KEY_CODES.ARROW_DOWN:
-              case KEY_CODES.HOME:
-              case KEY_CODES.END: {
-                if (!data.open) {
-                  evt.preventDefault();
-                  return evt.stopPropagation();
-                }
-                if (evt.keyCode === KEY_CODES.END) {
-                  data.selectedIdx = data.links.length - 1;
-                } else {
-                  data.selectedIdx = 0;
-                }
-                focusSelectedLink(data);
-                evt.preventDefault();
-                return evt.stopPropagation();
-              }
-            }
-          };
-        }
-        function makeLinksKeyboardHandler(data) {
-          return function(evt) {
-            if (!data.open) {
-              return;
-            }
-            data.selectedIdx = data.links.index(document.activeElement);
-            switch (evt.keyCode) {
-              case KEY_CODES.HOME:
-              case KEY_CODES.END: {
-                if (evt.keyCode === KEY_CODES.END) {
-                  data.selectedIdx = data.links.length - 1;
-                } else {
-                  data.selectedIdx = 0;
-                }
-                focusSelectedLink(data);
-                evt.preventDefault();
-                return evt.stopPropagation();
-              }
-              case KEY_CODES.ESCAPE: {
-                close(data);
-                data.button.focus();
-                evt.preventDefault();
-                return evt.stopPropagation();
-              }
-              case KEY_CODES.ARROW_LEFT:
-              case KEY_CODES.ARROW_UP: {
-                data.selectedIdx = Math.max(-1, data.selectedIdx - 1);
-                focusSelectedLink(data);
-                evt.preventDefault();
-                return evt.stopPropagation();
-              }
-              case KEY_CODES.ARROW_RIGHT:
-              case KEY_CODES.ARROW_DOWN: {
-                data.selectedIdx = Math.min(data.links.length - 1, data.selectedIdx + 1);
-                focusSelectedLink(data);
-                evt.preventDefault();
-                return evt.stopPropagation();
-              }
-            }
-          };
-        }
-        function focusSelectedLink(data) {
-          if (data.links[data.selectedIdx]) {
-            var selectedElement = data.links[data.selectedIdx];
-            selectedElement.focus();
-            navigate(selectedElement);
-          }
-        }
-        function reopen(data) {
-          if (!data.open) {
-            return;
-          }
-          close(data, true);
-          open(data, true);
-        }
-        function toggle(data) {
-          return debounce(function() {
-            data.open ? close(data) : open(data);
-          });
-        }
-        function navigate(data) {
-          return function(evt) {
-            var link = $(this);
-            var href = link.attr("href");
-            if (!Webflow.validClick(evt.currentTarget)) {
-              evt.preventDefault();
-              return;
-            }
-            if (href && href.indexOf("#") === 0 && data.open) {
-              close(data);
-            }
-          };
-        }
-        function outside(data) {
-          if (data.outside) {
-            $doc.off("click" + namespace, data.outside);
-          }
-          return function(evt) {
-            var $target = $(evt.target);
-            if (inEditor && $target.closest(".w-editor-bem-EditorOverlay").length) {
-              return;
-            }
-            outsideDebounced(data, $target);
-          };
-        }
-        var outsideDebounced = debounce(function(data, $target) {
-          if (!data.open) {
-            return;
-          }
-          var menu = $target.closest(".w-nav-menu");
-          if (!data.menu.is(menu)) {
-            close(data);
-          }
-        });
-        function resize(i, el) {
-          var data = $.data(el, namespace);
-          var collapsed = data.collapsed = data.button.css("display") !== "none";
-          if (data.open && !collapsed && !designer) {
-            close(data, true);
-          }
-          if (data.container.length) {
-            var updateEachMax = updateMax(data);
-            data.links.each(updateEachMax);
-            data.dropdowns.each(updateEachMax);
-          }
-          if (data.open) {
-            setOverlayHeight(data);
-          }
-        }
-        var maxWidth = "max-width";
-        function updateMax(data) {
-          var containMax = data.container.css(maxWidth);
-          if (containMax === "none") {
-            containMax = "";
-          }
-          return function(i, link) {
-            link = $(link);
-            link.css(maxWidth, "");
-            if (link.css(maxWidth) === "none") {
-              link.css(maxWidth, containMax);
-            }
-          };
-        }
-        function addMenuOpen(i, el) {
-          el.setAttribute("data-nav-menu-open", "");
-        }
-        function removeMenuOpen(i, el) {
-          el.removeAttribute("data-nav-menu-open");
-        }
-        function open(data, immediate) {
-          if (data.open) {
-            return;
-          }
-          data.open = true;
-          data.menu.each(addMenuOpen);
-          data.links.addClass(navbarOpenedLink);
-          data.dropdowns.addClass(navbarOpenedDropdown);
-          data.dropdownToggle.addClass(navbarOpenedDropdownToggle);
-          data.dropdownList.addClass(navbarOpenedDropdownList);
-          data.button.addClass(navbarOpenedButton);
-          var config = data.config;
-          var animation = config.animation;
-          if (animation === "none" || !tram.support.transform || config.duration <= 0) {
-            immediate = true;
-          }
-          var bodyHeight = setOverlayHeight(data);
-          var menuHeight = data.menu.outerHeight(true);
-          var menuWidth = data.menu.outerWidth(true);
-          var navHeight = data.el.height();
-          var navbarEl = data.el[0];
-          resize(0, navbarEl);
-          ix.intro(0, navbarEl);
-          Webflow.redraw.up();
-          if (!designer) {
-            $doc.on("click" + namespace, data.outside);
-          }
-          if (immediate) {
-            complete();
-            return;
-          }
-          var transConfig = "transform " + config.duration + "ms " + config.easing;
-          if (data.overlay) {
-            menuSibling = data.menu.prev();
-            data.overlay.show().append(data.menu);
-          }
-          if (config.animOver) {
-            tram(data.menu).add(transConfig).set({
-              x: config.animDirect * menuWidth,
-              height: bodyHeight
-            }).start({
-              x: 0
-            }).then(complete);
-            data.overlay && data.overlay.width(menuWidth);
-            return;
-          }
-          var offsetY = navHeight + menuHeight;
-          tram(data.menu).add(transConfig).set({
-            y: -offsetY
-          }).start({
-            y: 0
-          }).then(complete);
-          function complete() {
-            data.button.attr("aria-expanded", "true");
-          }
-        }
-        function setOverlayHeight(data) {
-          var config = data.config;
-          var bodyHeight = config.docHeight ? $doc.height() : $body.height();
-          if (config.animOver) {
-            data.menu.height(bodyHeight);
-          } else if (data.el.css("position") !== "fixed") {
-            bodyHeight -= data.el.outerHeight(true);
-          }
-          data.overlay && data.overlay.height(bodyHeight);
-          return bodyHeight;
-        }
-        function close(data, immediate) {
-          if (!data.open) {
-            return;
-          }
-          data.open = false;
-          data.button.removeClass(navbarOpenedButton);
-          var config = data.config;
-          if (config.animation === "none" || !tram.support.transform || config.duration <= 0) {
-            immediate = true;
-          }
-          ix.outro(0, data.el[0]);
-          $doc.off("click" + namespace, data.outside);
-          if (immediate) {
-            tram(data.menu).stop();
-            complete();
-            return;
-          }
-          var transConfig = "transform " + config.duration + "ms " + config.easing2;
-          var menuHeight = data.menu.outerHeight(true);
-          var menuWidth = data.menu.outerWidth(true);
-          var navHeight = data.el.height();
-          if (config.animOver) {
-            tram(data.menu).add(transConfig).start({
-              x: menuWidth * config.animDirect
-            }).then(complete);
-            return;
-          }
-          var offsetY = navHeight + menuHeight;
-          tram(data.menu).add(transConfig).start({
-            y: -offsetY
-          }).then(complete);
-          function complete() {
-            data.menu.height("");
-            tram(data.menu).set({
-              x: 0,
-              y: 0
-            });
-            data.menu.each(removeMenuOpen);
-            data.links.removeClass(navbarOpenedLink);
-            data.dropdowns.removeClass(navbarOpenedDropdown);
-            data.dropdownToggle.removeClass(navbarOpenedDropdownToggle);
-            data.dropdownList.removeClass(navbarOpenedDropdownList);
-            if (data.overlay && data.overlay.children().length) {
-              menuSibling.length ? data.menu.insertAfter(menuSibling) : data.menu.prependTo(data.parent);
-              data.overlay.attr("style", "").hide();
-            }
-            data.el.triggerHandler("w-close");
-            data.button.attr("aria-expanded", "false");
-          }
-        }
-        return api;
-      });
     }
   });
 
@@ -3702,17 +2820,17 @@
     }
   });
 
-  // node_modules/redux/node_modules/lodash/_freeGlobal.js
+  // node_modules/lodash/_freeGlobal.js
   var require_freeGlobal = __commonJS({
-    "node_modules/redux/node_modules/lodash/_freeGlobal.js"(exports, module) {
+    "node_modules/lodash/_freeGlobal.js"(exports, module) {
       var freeGlobal = typeof global == "object" && global && global.Object === Object && global;
       module.exports = freeGlobal;
     }
   });
 
-  // node_modules/redux/node_modules/lodash/_root.js
+  // node_modules/lodash/_root.js
   var require_root = __commonJS({
-    "node_modules/redux/node_modules/lodash/_root.js"(exports, module) {
+    "node_modules/lodash/_root.js"(exports, module) {
       var freeGlobal = require_freeGlobal();
       var freeSelf = typeof self == "object" && self && self.Object === Object && self;
       var root = freeGlobal || freeSelf || Function("return this")();
@@ -3720,18 +2838,18 @@
     }
   });
 
-  // node_modules/redux/node_modules/lodash/_Symbol.js
+  // node_modules/lodash/_Symbol.js
   var require_Symbol = __commonJS({
-    "node_modules/redux/node_modules/lodash/_Symbol.js"(exports, module) {
+    "node_modules/lodash/_Symbol.js"(exports, module) {
       var root = require_root();
       var Symbol2 = root.Symbol;
       module.exports = Symbol2;
     }
   });
 
-  // node_modules/redux/node_modules/lodash/_getRawTag.js
+  // node_modules/lodash/_getRawTag.js
   var require_getRawTag = __commonJS({
-    "node_modules/redux/node_modules/lodash/_getRawTag.js"(exports, module) {
+    "node_modules/lodash/_getRawTag.js"(exports, module) {
       var Symbol2 = require_Symbol();
       var objectProto = Object.prototype;
       var hasOwnProperty = objectProto.hasOwnProperty;
@@ -3758,9 +2876,9 @@
     }
   });
 
-  // node_modules/redux/node_modules/lodash/_objectToString.js
+  // node_modules/lodash/_objectToString.js
   var require_objectToString = __commonJS({
-    "node_modules/redux/node_modules/lodash/_objectToString.js"(exports, module) {
+    "node_modules/lodash/_objectToString.js"(exports, module) {
       var objectProto = Object.prototype;
       var nativeObjectToString = objectProto.toString;
       function objectToString(value) {
@@ -3770,9 +2888,9 @@
     }
   });
 
-  // node_modules/redux/node_modules/lodash/_baseGetTag.js
+  // node_modules/lodash/_baseGetTag.js
   var require_baseGetTag = __commonJS({
-    "node_modules/redux/node_modules/lodash/_baseGetTag.js"(exports, module) {
+    "node_modules/lodash/_baseGetTag.js"(exports, module) {
       var Symbol2 = require_Symbol();
       var getRawTag = require_getRawTag();
       var objectToString = require_objectToString();
@@ -3789,9 +2907,9 @@
     }
   });
 
-  // node_modules/redux/node_modules/lodash/_overArg.js
+  // node_modules/lodash/_overArg.js
   var require_overArg = __commonJS({
-    "node_modules/redux/node_modules/lodash/_overArg.js"(exports, module) {
+    "node_modules/lodash/_overArg.js"(exports, module) {
       function overArg(func, transform) {
         return function(arg) {
           return func(transform(arg));
@@ -3801,18 +2919,18 @@
     }
   });
 
-  // node_modules/redux/node_modules/lodash/_getPrototype.js
+  // node_modules/lodash/_getPrototype.js
   var require_getPrototype = __commonJS({
-    "node_modules/redux/node_modules/lodash/_getPrototype.js"(exports, module) {
+    "node_modules/lodash/_getPrototype.js"(exports, module) {
       var overArg = require_overArg();
       var getPrototype = overArg(Object.getPrototypeOf, Object);
       module.exports = getPrototype;
     }
   });
 
-  // node_modules/redux/node_modules/lodash/isObjectLike.js
+  // node_modules/lodash/isObjectLike.js
   var require_isObjectLike = __commonJS({
-    "node_modules/redux/node_modules/lodash/isObjectLike.js"(exports, module) {
+    "node_modules/lodash/isObjectLike.js"(exports, module) {
       function isObjectLike(value) {
         return value != null && typeof value == "object";
       }
@@ -3820,9 +2938,9 @@
     }
   });
 
-  // node_modules/redux/node_modules/lodash/isPlainObject.js
+  // node_modules/lodash/isPlainObject.js
   var require_isPlainObject = __commonJS({
-    "node_modules/redux/node_modules/lodash/isPlainObject.js"(exports, module) {
+    "node_modules/lodash/isPlainObject.js"(exports, module) {
       var baseGetTag = require_baseGetTag();
       var getPrototype = require_getPrototype();
       var isObjectLike = require_isObjectLike();
@@ -5380,93 +4498,6 @@
     }
   });
 
-  // node_modules/lodash/_freeGlobal.js
-  var require_freeGlobal2 = __commonJS({
-    "node_modules/lodash/_freeGlobal.js"(exports, module) {
-      var freeGlobal = typeof global == "object" && global && global.Object === Object && global;
-      module.exports = freeGlobal;
-    }
-  });
-
-  // node_modules/lodash/_root.js
-  var require_root2 = __commonJS({
-    "node_modules/lodash/_root.js"(exports, module) {
-      var freeGlobal = require_freeGlobal2();
-      var freeSelf = typeof self == "object" && self && self.Object === Object && self;
-      var root = freeGlobal || freeSelf || Function("return this")();
-      module.exports = root;
-    }
-  });
-
-  // node_modules/lodash/_Symbol.js
-  var require_Symbol2 = __commonJS({
-    "node_modules/lodash/_Symbol.js"(exports, module) {
-      var root = require_root2();
-      var Symbol2 = root.Symbol;
-      module.exports = Symbol2;
-    }
-  });
-
-  // node_modules/lodash/_getRawTag.js
-  var require_getRawTag2 = __commonJS({
-    "node_modules/lodash/_getRawTag.js"(exports, module) {
-      var Symbol2 = require_Symbol2();
-      var objectProto = Object.prototype;
-      var hasOwnProperty = objectProto.hasOwnProperty;
-      var nativeObjectToString = objectProto.toString;
-      var symToStringTag = Symbol2 ? Symbol2.toStringTag : void 0;
-      function getRawTag(value) {
-        var isOwn = hasOwnProperty.call(value, symToStringTag), tag = value[symToStringTag];
-        try {
-          value[symToStringTag] = void 0;
-          var unmasked = true;
-        } catch (e) {
-        }
-        var result = nativeObjectToString.call(value);
-        if (unmasked) {
-          if (isOwn) {
-            value[symToStringTag] = tag;
-          } else {
-            delete value[symToStringTag];
-          }
-        }
-        return result;
-      }
-      module.exports = getRawTag;
-    }
-  });
-
-  // node_modules/lodash/_objectToString.js
-  var require_objectToString2 = __commonJS({
-    "node_modules/lodash/_objectToString.js"(exports, module) {
-      var objectProto = Object.prototype;
-      var nativeObjectToString = objectProto.toString;
-      function objectToString(value) {
-        return nativeObjectToString.call(value);
-      }
-      module.exports = objectToString;
-    }
-  });
-
-  // node_modules/lodash/_baseGetTag.js
-  var require_baseGetTag2 = __commonJS({
-    "node_modules/lodash/_baseGetTag.js"(exports, module) {
-      var Symbol2 = require_Symbol2();
-      var getRawTag = require_getRawTag2();
-      var objectToString = require_objectToString2();
-      var nullTag = "[object Null]";
-      var undefinedTag = "[object Undefined]";
-      var symToStringTag = Symbol2 ? Symbol2.toStringTag : void 0;
-      function baseGetTag(value) {
-        if (value == null) {
-          return value === void 0 ? undefinedTag : nullTag;
-        }
-        return symToStringTag && symToStringTag in Object(value) ? getRawTag(value) : objectToString(value);
-      }
-      module.exports = baseGetTag;
-    }
-  });
-
   // node_modules/lodash/isObject.js
   var require_isObject = __commonJS({
     "node_modules/lodash/isObject.js"(exports, module) {
@@ -5481,7 +4512,7 @@
   // node_modules/lodash/isFunction.js
   var require_isFunction = __commonJS({
     "node_modules/lodash/isFunction.js"(exports, module) {
-      var baseGetTag = require_baseGetTag2();
+      var baseGetTag = require_baseGetTag();
       var isObject = require_isObject();
       var asyncTag = "[object AsyncFunction]";
       var funcTag = "[object Function]";
@@ -5501,7 +4532,7 @@
   // node_modules/lodash/_coreJsData.js
   var require_coreJsData = __commonJS({
     "node_modules/lodash/_coreJsData.js"(exports, module) {
-      var root = require_root2();
+      var root = require_root();
       var coreJsData = root["__core-js_shared__"];
       module.exports = coreJsData;
     }
@@ -5598,7 +4629,7 @@
   var require_Map = __commonJS({
     "node_modules/lodash/_Map.js"(exports, module) {
       var getNative = require_getNative();
-      var root = require_root2();
+      var root = require_root();
       var Map = getNative(root, "Map");
       module.exports = Map;
     }
@@ -5998,7 +5029,7 @@
   // node_modules/lodash/_Uint8Array.js
   var require_Uint8Array = __commonJS({
     "node_modules/lodash/_Uint8Array.js"(exports, module) {
-      var root = require_root2();
+      var root = require_root();
       var Uint8Array2 = root.Uint8Array;
       module.exports = Uint8Array2;
     }
@@ -6035,7 +5066,7 @@
   // node_modules/lodash/_equalByTag.js
   var require_equalByTag = __commonJS({
     "node_modules/lodash/_equalByTag.js"(exports, module) {
-      var Symbol2 = require_Symbol2();
+      var Symbol2 = require_Symbol();
       var Uint8Array2 = require_Uint8Array();
       var eq = require_eq();
       var equalArrays = require_equalArrays();
@@ -6203,21 +5234,11 @@
     }
   });
 
-  // node_modules/lodash/isObjectLike.js
-  var require_isObjectLike2 = __commonJS({
-    "node_modules/lodash/isObjectLike.js"(exports, module) {
-      function isObjectLike(value) {
-        return value != null && typeof value == "object";
-      }
-      module.exports = isObjectLike;
-    }
-  });
-
   // node_modules/lodash/_baseIsArguments.js
   var require_baseIsArguments = __commonJS({
     "node_modules/lodash/_baseIsArguments.js"(exports, module) {
-      var baseGetTag = require_baseGetTag2();
-      var isObjectLike = require_isObjectLike2();
+      var baseGetTag = require_baseGetTag();
+      var isObjectLike = require_isObjectLike();
       var argsTag = "[object Arguments]";
       function baseIsArguments(value) {
         return isObjectLike(value) && baseGetTag(value) == argsTag;
@@ -6230,7 +5251,7 @@
   var require_isArguments = __commonJS({
     "node_modules/lodash/isArguments.js"(exports, module) {
       var baseIsArguments = require_baseIsArguments();
-      var isObjectLike = require_isObjectLike2();
+      var isObjectLike = require_isObjectLike();
       var objectProto = Object.prototype;
       var hasOwnProperty = objectProto.hasOwnProperty;
       var propertyIsEnumerable = objectProto.propertyIsEnumerable;
@@ -6256,7 +5277,7 @@
   // node_modules/lodash/isBuffer.js
   var require_isBuffer = __commonJS({
     "node_modules/lodash/isBuffer.js"(exports, module) {
-      var root = require_root2();
+      var root = require_root();
       var stubFalse = require_stubFalse();
       var freeExports = typeof exports == "object" && exports && !exports.nodeType && exports;
       var freeModule = freeExports && typeof module == "object" && module && !module.nodeType && module;
@@ -6296,9 +5317,9 @@
   // node_modules/lodash/_baseIsTypedArray.js
   var require_baseIsTypedArray = __commonJS({
     "node_modules/lodash/_baseIsTypedArray.js"(exports, module) {
-      var baseGetTag = require_baseGetTag2();
+      var baseGetTag = require_baseGetTag();
       var isLength = require_isLength();
-      var isObjectLike = require_isObjectLike2();
+      var isObjectLike = require_isObjectLike();
       var argsTag = "[object Arguments]";
       var arrayTag = "[object Array]";
       var boolTag = "[object Boolean]";
@@ -6348,7 +5369,7 @@
   // node_modules/lodash/_nodeUtil.js
   var require_nodeUtil = __commonJS({
     "node_modules/lodash/_nodeUtil.js"(exports, module) {
-      var freeGlobal = require_freeGlobal2();
+      var freeGlobal = require_freeGlobal();
       var freeExports = typeof exports == "object" && exports && !exports.nodeType && exports;
       var freeModule = freeExports && typeof module == "object" && module && !module.nodeType && module;
       var moduleExports = freeModule && freeModule.exports === freeExports;
@@ -6419,22 +5440,10 @@
     }
   });
 
-  // node_modules/lodash/_overArg.js
-  var require_overArg2 = __commonJS({
-    "node_modules/lodash/_overArg.js"(exports, module) {
-      function overArg(func, transform) {
-        return function(arg) {
-          return func(transform(arg));
-        };
-      }
-      module.exports = overArg;
-    }
-  });
-
   // node_modules/lodash/_nativeKeys.js
   var require_nativeKeys = __commonJS({
     "node_modules/lodash/_nativeKeys.js"(exports, module) {
-      var overArg = require_overArg2();
+      var overArg = require_overArg();
       var nativeKeys = overArg(Object.keys, Object);
       module.exports = nativeKeys;
     }
@@ -6559,7 +5568,7 @@
   var require_DataView = __commonJS({
     "node_modules/lodash/_DataView.js"(exports, module) {
       var getNative = require_getNative();
-      var root = require_root2();
+      var root = require_root();
       var DataView = getNative(root, "DataView");
       module.exports = DataView;
     }
@@ -6569,7 +5578,7 @@
   var require_Promise = __commonJS({
     "node_modules/lodash/_Promise.js"(exports, module) {
       var getNative = require_getNative();
-      var root = require_root2();
+      var root = require_root();
       var Promise2 = getNative(root, "Promise");
       module.exports = Promise2;
     }
@@ -6579,7 +5588,7 @@
   var require_Set = __commonJS({
     "node_modules/lodash/_Set.js"(exports, module) {
       var getNative = require_getNative();
-      var root = require_root2();
+      var root = require_root();
       var Set = getNative(root, "Set");
       module.exports = Set;
     }
@@ -6589,7 +5598,7 @@
   var require_WeakMap = __commonJS({
     "node_modules/lodash/_WeakMap.js"(exports, module) {
       var getNative = require_getNative();
-      var root = require_root2();
+      var root = require_root();
       var WeakMap2 = getNative(root, "WeakMap");
       module.exports = WeakMap2;
     }
@@ -6603,7 +5612,7 @@
       var Promise2 = require_Promise();
       var Set = require_Set();
       var WeakMap2 = require_WeakMap();
-      var baseGetTag = require_baseGetTag2();
+      var baseGetTag = require_baseGetTag();
       var toSource = require_toSource();
       var mapTag = "[object Map]";
       var objectTag = "[object Object]";
@@ -6696,7 +5705,7 @@
   var require_baseIsEqual = __commonJS({
     "node_modules/lodash/_baseIsEqual.js"(exports, module) {
       var baseIsEqualDeep = require_baseIsEqualDeep();
-      var isObjectLike = require_isObjectLike2();
+      var isObjectLike = require_isObjectLike();
       function baseIsEqual(value, other, bitmask, customizer, stack) {
         if (value === other) {
           return true;
@@ -6817,8 +5826,8 @@
   // node_modules/lodash/isSymbol.js
   var require_isSymbol = __commonJS({
     "node_modules/lodash/isSymbol.js"(exports, module) {
-      var baseGetTag = require_baseGetTag2();
-      var isObjectLike = require_isObjectLike2();
+      var baseGetTag = require_baseGetTag();
+      var isObjectLike = require_isObjectLike();
       var symbolTag = "[object Symbol]";
       function isSymbol(value) {
         return typeof value == "symbol" || isObjectLike(value) && baseGetTag(value) == symbolTag;
@@ -6930,7 +5939,7 @@
   // node_modules/lodash/_baseToString.js
   var require_baseToString = __commonJS({
     "node_modules/lodash/_baseToString.js"(exports, module) {
-      var Symbol2 = require_Symbol2();
+      var Symbol2 = require_Symbol();
       var arrayMap = require_arrayMap();
       var isArray = require_isArray();
       var isSymbol = require_isSymbol();
@@ -9800,9 +8809,9 @@
   // node_modules/lodash/isString.js
   var require_isString = __commonJS({
     "node_modules/lodash/isString.js"(exports, module) {
-      var baseGetTag = require_baseGetTag2();
+      var baseGetTag = require_baseGetTag();
       var isArray = require_isArray();
-      var isObjectLike = require_isObjectLike2();
+      var isObjectLike = require_isObjectLike();
       var stringTag = "[object String]";
       function isString(value) {
         return typeof value == "string" || !isArray(value) && isObjectLike(value) && baseGetTag(value) == stringTag;
@@ -10047,20 +9056,11 @@
     }
   });
 
-  // node_modules/lodash/_getPrototype.js
-  var require_getPrototype2 = __commonJS({
-    "node_modules/lodash/_getPrototype.js"(exports, module) {
-      var overArg = require_overArg2();
-      var getPrototype = overArg(Object.getPrototypeOf, Object);
-      module.exports = getPrototype;
-    }
-  });
-
   // node_modules/lodash/_getSymbolsIn.js
   var require_getSymbolsIn = __commonJS({
     "node_modules/lodash/_getSymbolsIn.js"(exports, module) {
       var arrayPush = require_arrayPush();
-      var getPrototype = require_getPrototype2();
+      var getPrototype = require_getPrototype();
       var getSymbols = require_getSymbols();
       var stubArray = require_stubArray();
       var nativeGetSymbols = Object.getOwnPropertySymbols;
@@ -10281,7 +9281,7 @@
   // node_modules/lodash/now.js
   var require_now = __commonJS({
     "node_modules/lodash/now.js"(exports, module) {
-      var root = require_root2();
+      var root = require_root();
       var now = function() {
         return root.Date.now();
       };
@@ -10820,7 +9820,7 @@
   // node_modules/lodash/_isFlattenable.js
   var require_isFlattenable = __commonJS({
     "node_modules/lodash/_isFlattenable.js"(exports, module) {
-      var Symbol2 = require_Symbol2();
+      var Symbol2 = require_Symbol();
       var isArguments = require_isArguments();
       var isArray = require_isArray();
       var spreadableSymbol = Symbol2 ? Symbol2.isConcatSpreadable : void 0;
@@ -11114,7 +10114,7 @@
       var LodashWrapper = require_LodashWrapper();
       var baseLodash = require_baseLodash();
       var isArray = require_isArray();
-      var isObjectLike = require_isObjectLike2();
+      var isObjectLike = require_isObjectLike();
       var wrapperClone = require_wrapperClone();
       var objectProto = Object.prototype;
       var hasOwnProperty = objectProto.hasOwnProperty;
@@ -13044,6 +12044,371 @@
     }
   });
 
+  // shared/render/plugins/BaseSiteModules/webflow-links.js
+  var require_webflow_links = __commonJS({
+    "shared/render/plugins/BaseSiteModules/webflow-links.js"(exports, module) {
+      var Webflow = require_webflow_lib();
+      Webflow.define("links", module.exports = function($, _) {
+        var api = {};
+        var $win = $(window);
+        var designer;
+        var inApp = Webflow.env();
+        var location = window.location;
+        var tempLink = document.createElement("a");
+        var linkCurrent = "w--current";
+        var indexPage = /index\.(html|php)$/;
+        var dirList = /\/$/;
+        var anchors;
+        var slug;
+        api.ready = api.design = api.preview = init;
+        function init() {
+          designer = inApp && Webflow.env("design");
+          slug = Webflow.env("slug") || location.pathname || "";
+          Webflow.scroll.off(scroll);
+          anchors = [];
+          var links = document.links;
+          for (var i = 0; i < links.length; ++i) {
+            select(links[i]);
+          }
+          if (anchors.length) {
+            Webflow.scroll.on(scroll);
+            scroll();
+          }
+        }
+        function select(link) {
+          var href = designer && link.getAttribute("href-disabled") || link.getAttribute("href");
+          tempLink.href = href;
+          if (href.indexOf(":") >= 0) {
+            return;
+          }
+          var $link = $(link);
+          if (tempLink.hash.length > 1 && tempLink.host + tempLink.pathname === location.host + location.pathname) {
+            if (!/^#[a-zA-Z0-9\-\_]+$/.test(tempLink.hash)) {
+              return;
+            }
+            var $section = $(tempLink.hash);
+            $section.length && anchors.push({
+              link: $link,
+              sec: $section,
+              active: false
+            });
+            return;
+          }
+          if (href === "#" || href === "") {
+            return;
+          }
+          var match = tempLink.href === location.href || href === slug || indexPage.test(href) && dirList.test(slug);
+          setClass($link, linkCurrent, match);
+        }
+        function scroll() {
+          var viewTop = $win.scrollTop();
+          var viewHeight = $win.height();
+          _.each(anchors, function(anchor) {
+            var $link = anchor.link;
+            var $section = anchor.sec;
+            var top = $section.offset().top;
+            var height = $section.outerHeight();
+            var offset = viewHeight * 0.5;
+            var active = $section.is(":visible") && top + height - offset >= viewTop && top + offset <= viewTop + viewHeight;
+            if (anchor.active === active) {
+              return;
+            }
+            anchor.active = active;
+            setClass($link, linkCurrent, active);
+          });
+        }
+        function setClass($elem, className, add) {
+          var exists = $elem.hasClass(className);
+          if (add && exists) {
+            return;
+          }
+          if (!add && !exists) {
+            return;
+          }
+          add ? $elem.addClass(className) : $elem.removeClass(className);
+        }
+        return api;
+      });
+    }
+  });
+
+  // shared/render/plugins/BaseSiteModules/webflow-scroll.js
+  var require_webflow_scroll = __commonJS({
+    "shared/render/plugins/BaseSiteModules/webflow-scroll.js"(exports, module) {
+      var Webflow = require_webflow_lib();
+      Webflow.define("scroll", module.exports = function($) {
+        var NS_EVENTS = {
+          WF_CLICK_EMPTY: "click.wf-empty-link",
+          WF_CLICK_SCROLL: "click.wf-scroll"
+        };
+        var loc = window.location;
+        var history = inIframe() ? null : window.history;
+        var $win = $(window);
+        var $doc = $(document);
+        var $body = $(document.body);
+        var animate = window.requestAnimationFrame || window.mozRequestAnimationFrame || window.webkitRequestAnimationFrame || function(fn) {
+          window.setTimeout(fn, 15);
+        };
+        var rootTag = Webflow.env("editor") ? ".w-editor-body" : "body";
+        var headerSelector = "header, " + rootTag + " > .header, " + rootTag + " > .w-nav:not([data-no-scroll])";
+        var emptyHrefSelector = 'a[href="#"]';
+        var localHrefSelector = 'a[href*="#"]:not(.w-tab-link):not(' + emptyHrefSelector + ")";
+        var scrollTargetOutlineCSS = '.wf-force-outline-none[tabindex="-1"]:focus{outline:none;}';
+        var focusStylesEl = document.createElement("style");
+        focusStylesEl.appendChild(document.createTextNode(scrollTargetOutlineCSS));
+        function inIframe() {
+          try {
+            return Boolean(window.frameElement);
+          } catch (e) {
+            return true;
+          }
+        }
+        var validHash = /^#[a-zA-Z0-9][\w:.-]*$/;
+        function linksToCurrentPage(link) {
+          return validHash.test(link.hash) && link.host + link.pathname === loc.host + loc.pathname;
+        }
+        const reducedMotionMediaQuery = typeof window.matchMedia === "function" && window.matchMedia("(prefers-reduced-motion: reduce)");
+        function reducedMotionEnabled() {
+          return document.body.getAttribute("data-wf-scroll-motion") === "none" || reducedMotionMediaQuery.matches;
+        }
+        function setFocusable($el, action) {
+          var initialTabindex;
+          switch (action) {
+            case "add":
+              initialTabindex = $el.attr("tabindex");
+              if (initialTabindex) {
+                $el.attr("data-wf-tabindex-swap", initialTabindex);
+              } else {
+                $el.attr("tabindex", "-1");
+              }
+              break;
+            case "remove":
+              initialTabindex = $el.attr("data-wf-tabindex-swap");
+              if (initialTabindex) {
+                $el.attr("tabindex", initialTabindex);
+                $el.removeAttr("data-wf-tabindex-swap");
+              } else {
+                $el.removeAttr("tabindex");
+              }
+              break;
+          }
+          $el.toggleClass("wf-force-outline-none", action === "add");
+        }
+        function validateScroll(evt) {
+          var target = evt.currentTarget;
+          if (
+            // Bail if in Designer
+            Webflow.env("design") || // Ignore links being used by jQuery mobile
+            window.$.mobile && /(?:^|\s)ui-link(?:$|\s)/.test(target.className)
+          ) {
+            return;
+          }
+          var hash = linksToCurrentPage(target) ? target.hash : "";
+          if (hash === "")
+            return;
+          var $el = $(hash);
+          if (!$el.length) {
+            return;
+          }
+          if (evt) {
+            evt.preventDefault();
+            evt.stopPropagation();
+          }
+          updateHistory(hash, evt);
+          window.setTimeout(function() {
+            scroll($el, function setFocus() {
+              setFocusable($el, "add");
+              $el.get(0).focus({
+                preventScroll: true
+              });
+              setFocusable($el, "remove");
+            });
+          }, evt ? 0 : 300);
+        }
+        function updateHistory(hash) {
+          if (loc.hash !== hash && history && history.pushState && // Navigation breaks Chrome when the protocol is `file:`.
+          !(Webflow.env.chrome && loc.protocol === "file:")) {
+            var oldHash = history.state && history.state.hash;
+            if (oldHash !== hash) {
+              history.pushState({
+                hash
+              }, "", hash);
+            }
+          }
+        }
+        function scroll($targetEl, cb) {
+          var start = $win.scrollTop();
+          var end = calculateScrollEndPosition($targetEl);
+          if (start === end)
+            return;
+          var duration = calculateScrollDuration($targetEl, start, end);
+          var clock = Date.now();
+          var step = function() {
+            var elapsed = Date.now() - clock;
+            window.scroll(0, getY(start, end, elapsed, duration));
+            if (elapsed <= duration) {
+              animate(step);
+            } else if (typeof cb === "function") {
+              cb();
+            }
+          };
+          animate(step);
+        }
+        function calculateScrollEndPosition($targetEl) {
+          var $header = $(headerSelector);
+          var offsetY = $header.css("position") === "fixed" ? $header.outerHeight() : 0;
+          var end = $targetEl.offset().top - offsetY;
+          if ($targetEl.data("scroll") === "mid") {
+            var available = $win.height() - offsetY;
+            var elHeight = $targetEl.outerHeight();
+            if (elHeight < available) {
+              end -= Math.round((available - elHeight) / 2);
+            }
+          }
+          return end;
+        }
+        function calculateScrollDuration($targetEl, start, end) {
+          if (reducedMotionEnabled())
+            return 0;
+          var mult = 1;
+          $body.add($targetEl).each(function(_, el) {
+            var time = parseFloat(el.getAttribute("data-scroll-time"));
+            if (!isNaN(time) && time >= 0) {
+              mult = time;
+            }
+          });
+          return (472.143 * Math.log(Math.abs(start - end) + 125) - 2e3) * mult;
+        }
+        function getY(start, end, elapsed, duration) {
+          if (elapsed > duration) {
+            return end;
+          }
+          return start + (end - start) * ease(elapsed / duration);
+        }
+        function ease(t) {
+          return t < 0.5 ? 4 * t * t * t : (t - 1) * (2 * t - 2) * (2 * t - 2) + 1;
+        }
+        function ready() {
+          var {
+            WF_CLICK_EMPTY,
+            WF_CLICK_SCROLL
+          } = NS_EVENTS;
+          $doc.on(WF_CLICK_SCROLL, localHrefSelector, validateScroll);
+          $doc.on(WF_CLICK_EMPTY, emptyHrefSelector, function(e) {
+            e.preventDefault();
+          });
+          document.head.insertBefore(focusStylesEl, document.head.firstChild);
+        }
+        return {
+          ready
+        };
+      });
+    }
+  });
+
+  // shared/render/plugins/BaseSiteModules/webflow-touch.js
+  var require_webflow_touch = __commonJS({
+    "shared/render/plugins/BaseSiteModules/webflow-touch.js"(exports, module) {
+      var Webflow = require_webflow_lib();
+      Webflow.define("touch", module.exports = function($) {
+        var api = {};
+        var getSelection = window.getSelection;
+        $.event.special.tap = {
+          bindType: "click",
+          delegateType: "click"
+        };
+        api.init = function(el) {
+          el = typeof el === "string" ? $(el).get(0) : el;
+          return el ? new Touch(el) : null;
+        };
+        function Touch(el) {
+          var active = false;
+          var useTouch = false;
+          var thresholdX = Math.min(Math.round(window.innerWidth * 0.04), 40);
+          var startX;
+          var lastX;
+          el.addEventListener("touchstart", start, false);
+          el.addEventListener("touchmove", move, false);
+          el.addEventListener("touchend", end, false);
+          el.addEventListener("touchcancel", cancel, false);
+          el.addEventListener("mousedown", start, false);
+          el.addEventListener("mousemove", move, false);
+          el.addEventListener("mouseup", end, false);
+          el.addEventListener("mouseout", cancel, false);
+          function start(evt) {
+            var touches = evt.touches;
+            if (touches && touches.length > 1) {
+              return;
+            }
+            active = true;
+            if (touches) {
+              useTouch = true;
+              startX = touches[0].clientX;
+            } else {
+              startX = evt.clientX;
+            }
+            lastX = startX;
+          }
+          function move(evt) {
+            if (!active) {
+              return;
+            }
+            if (useTouch && evt.type === "mousemove") {
+              evt.preventDefault();
+              evt.stopPropagation();
+              return;
+            }
+            var touches = evt.touches;
+            var x = touches ? touches[0].clientX : evt.clientX;
+            var velocityX = x - lastX;
+            lastX = x;
+            if (Math.abs(velocityX) > thresholdX && getSelection && String(getSelection()) === "") {
+              triggerEvent("swipe", evt, {
+                direction: velocityX > 0 ? "right" : "left"
+              });
+              cancel();
+            }
+          }
+          function end(evt) {
+            if (!active) {
+              return;
+            }
+            active = false;
+            if (useTouch && evt.type === "mouseup") {
+              evt.preventDefault();
+              evt.stopPropagation();
+              useTouch = false;
+              return;
+            }
+          }
+          function cancel() {
+            active = false;
+          }
+          function destroy() {
+            el.removeEventListener("touchstart", start, false);
+            el.removeEventListener("touchmove", move, false);
+            el.removeEventListener("touchend", end, false);
+            el.removeEventListener("touchcancel", cancel, false);
+            el.removeEventListener("mousedown", start, false);
+            el.removeEventListener("mousemove", move, false);
+            el.removeEventListener("mouseup", end, false);
+            el.removeEventListener("mouseout", cancel, false);
+            el = null;
+          }
+          this.destroy = destroy;
+        }
+        function triggerEvent(type, evt, data) {
+          var newEvent = $.Event(type, {
+            originalEvent: evt
+          });
+          $(evt.target).trigger(newEvent, data);
+        }
+        api.instance = api.init(document);
+        return api;
+      });
+    }
+  });
+
   // shared/render/plugins/Form/webflow-forms.js
   var require_webflow_forms = __commonJS({
     "shared/render/plugins/Form/webflow-forms.js"(exports, module) {
@@ -13502,18 +12867,470 @@
     }
   });
 
+  // shared/render/plugins/Navbar/webflow-navbar.js
+  var require_webflow_navbar = __commonJS({
+    "shared/render/plugins/Navbar/webflow-navbar.js"(exports, module) {
+      var Webflow = require_webflow_lib();
+      var IXEvents = require_webflow_ix2_events();
+      var KEY_CODES = {
+        ARROW_LEFT: 37,
+        ARROW_UP: 38,
+        ARROW_RIGHT: 39,
+        ARROW_DOWN: 40,
+        ESCAPE: 27,
+        SPACE: 32,
+        ENTER: 13,
+        HOME: 36,
+        END: 35
+      };
+      Webflow.define("navbar", module.exports = function($, _) {
+        var api = {};
+        var tram = $.tram;
+        var $win = $(window);
+        var $doc = $(document);
+        var debounce = _.debounce;
+        var $body;
+        var $navbars;
+        var designer;
+        var inEditor;
+        var inApp = Webflow.env();
+        var overlay = '<div class="w-nav-overlay" data-wf-ignore />';
+        var namespace = ".w-nav";
+        var navbarOpenedButton = "w--open";
+        var navbarOpenedDropdown = "w--nav-dropdown-open";
+        var navbarOpenedDropdownToggle = "w--nav-dropdown-toggle-open";
+        var navbarOpenedDropdownList = "w--nav-dropdown-list-open";
+        var navbarOpenedLink = "w--nav-link-open";
+        var ix = IXEvents.triggers;
+        var menuSibling = $();
+        api.ready = api.design = api.preview = init;
+        api.destroy = function() {
+          menuSibling = $();
+          removeListeners();
+          if ($navbars && $navbars.length) {
+            $navbars.each(teardown);
+          }
+        };
+        function init() {
+          designer = inApp && Webflow.env("design");
+          inEditor = Webflow.env("editor");
+          $body = $(document.body);
+          $navbars = $doc.find(namespace);
+          if (!$navbars.length) {
+            return;
+          }
+          $navbars.each(build);
+          removeListeners();
+          addListeners();
+        }
+        function removeListeners() {
+          Webflow.resize.off(resizeAll);
+        }
+        function addListeners() {
+          Webflow.resize.on(resizeAll);
+        }
+        function resizeAll() {
+          $navbars.each(resize);
+        }
+        function build(i, el) {
+          var $el = $(el);
+          var data = $.data(el, namespace);
+          if (!data) {
+            data = $.data(el, namespace, {
+              open: false,
+              el: $el,
+              config: {},
+              selectedIdx: -1
+            });
+          }
+          data.menu = $el.find(".w-nav-menu");
+          data.links = data.menu.find(".w-nav-link");
+          data.dropdowns = data.menu.find(".w-dropdown");
+          data.dropdownToggle = data.menu.find(".w-dropdown-toggle");
+          data.dropdownList = data.menu.find(".w-dropdown-list");
+          data.button = $el.find(".w-nav-button");
+          data.container = $el.find(".w-container");
+          data.overlayContainerId = "w-nav-overlay-" + i;
+          data.outside = outside(data);
+          var navBrandLink = $el.find(".w-nav-brand");
+          if (navBrandLink && navBrandLink.attr("href") === "/" && navBrandLink.attr("aria-label") == null) {
+            navBrandLink.attr("aria-label", "home");
+          }
+          data.button.attr("style", "-webkit-user-select: text;");
+          if (data.button.attr("aria-label") == null) {
+            data.button.attr("aria-label", "menu");
+          }
+          data.button.attr("role", "button");
+          data.button.attr("tabindex", "0");
+          data.button.attr("aria-controls", data.overlayContainerId);
+          data.button.attr("aria-haspopup", "menu");
+          data.button.attr("aria-expanded", "false");
+          data.el.off(namespace);
+          data.button.off(namespace);
+          data.menu.off(namespace);
+          configure(data);
+          if (designer) {
+            removeOverlay(data);
+            data.el.on("setting" + namespace, handler(data));
+          } else {
+            addOverlay(data);
+            data.button.on("click" + namespace, toggle(data));
+            data.menu.on("click" + namespace, "a", navigate(data));
+            data.button.on("keydown" + namespace, makeToggleButtonKeyboardHandler(data));
+            data.el.on("keydown" + namespace, makeLinksKeyboardHandler(data));
+          }
+          resize(i, el);
+        }
+        function teardown(i, el) {
+          var data = $.data(el, namespace);
+          if (data) {
+            removeOverlay(data);
+            $.removeData(el, namespace);
+          }
+        }
+        function removeOverlay(data) {
+          if (!data.overlay) {
+            return;
+          }
+          close(data, true);
+          data.overlay.remove();
+          data.overlay = null;
+        }
+        function addOverlay(data) {
+          if (data.overlay) {
+            return;
+          }
+          data.overlay = $(overlay).appendTo(data.el);
+          data.overlay.attr("id", data.overlayContainerId);
+          data.parent = data.menu.parent();
+          close(data, true);
+        }
+        function configure(data) {
+          var config = {};
+          var old = data.config || {};
+          var animation = config.animation = data.el.attr("data-animation") || "default";
+          config.animOver = /^over/.test(animation);
+          config.animDirect = /left$/.test(animation) ? -1 : 1;
+          if (old.animation !== animation) {
+            data.open && _.defer(reopen, data);
+          }
+          config.easing = data.el.attr("data-easing") || "ease";
+          config.easing2 = data.el.attr("data-easing2") || "ease";
+          var duration = data.el.attr("data-duration");
+          config.duration = duration != null ? Number(duration) : 400;
+          config.docHeight = data.el.attr("data-doc-height");
+          data.config = config;
+        }
+        function handler(data) {
+          return function(evt, options) {
+            options = options || {};
+            var winWidth = $win.width();
+            configure(data);
+            options.open === true && open(data, true);
+            options.open === false && close(data, true);
+            data.open && _.defer(function() {
+              if (winWidth !== $win.width()) {
+                reopen(data);
+              }
+            });
+          };
+        }
+        function makeToggleButtonKeyboardHandler(data) {
+          return function(evt) {
+            switch (evt.keyCode) {
+              case KEY_CODES.SPACE:
+              case KEY_CODES.ENTER: {
+                toggle(data)();
+                evt.preventDefault();
+                return evt.stopPropagation();
+              }
+              case KEY_CODES.ESCAPE: {
+                close(data);
+                evt.preventDefault();
+                return evt.stopPropagation();
+              }
+              case KEY_CODES.ARROW_RIGHT:
+              case KEY_CODES.ARROW_DOWN:
+              case KEY_CODES.HOME:
+              case KEY_CODES.END: {
+                if (!data.open) {
+                  evt.preventDefault();
+                  return evt.stopPropagation();
+                }
+                if (evt.keyCode === KEY_CODES.END) {
+                  data.selectedIdx = data.links.length - 1;
+                } else {
+                  data.selectedIdx = 0;
+                }
+                focusSelectedLink(data);
+                evt.preventDefault();
+                return evt.stopPropagation();
+              }
+            }
+          };
+        }
+        function makeLinksKeyboardHandler(data) {
+          return function(evt) {
+            if (!data.open) {
+              return;
+            }
+            data.selectedIdx = data.links.index(document.activeElement);
+            switch (evt.keyCode) {
+              case KEY_CODES.HOME:
+              case KEY_CODES.END: {
+                if (evt.keyCode === KEY_CODES.END) {
+                  data.selectedIdx = data.links.length - 1;
+                } else {
+                  data.selectedIdx = 0;
+                }
+                focusSelectedLink(data);
+                evt.preventDefault();
+                return evt.stopPropagation();
+              }
+              case KEY_CODES.ESCAPE: {
+                close(data);
+                data.button.focus();
+                evt.preventDefault();
+                return evt.stopPropagation();
+              }
+              case KEY_CODES.ARROW_LEFT:
+              case KEY_CODES.ARROW_UP: {
+                data.selectedIdx = Math.max(-1, data.selectedIdx - 1);
+                focusSelectedLink(data);
+                evt.preventDefault();
+                return evt.stopPropagation();
+              }
+              case KEY_CODES.ARROW_RIGHT:
+              case KEY_CODES.ARROW_DOWN: {
+                data.selectedIdx = Math.min(data.links.length - 1, data.selectedIdx + 1);
+                focusSelectedLink(data);
+                evt.preventDefault();
+                return evt.stopPropagation();
+              }
+            }
+          };
+        }
+        function focusSelectedLink(data) {
+          if (data.links[data.selectedIdx]) {
+            var selectedElement = data.links[data.selectedIdx];
+            selectedElement.focus();
+            navigate(selectedElement);
+          }
+        }
+        function reopen(data) {
+          if (!data.open) {
+            return;
+          }
+          close(data, true);
+          open(data, true);
+        }
+        function toggle(data) {
+          return debounce(function() {
+            data.open ? close(data) : open(data);
+          });
+        }
+        function navigate(data) {
+          return function(evt) {
+            var link = $(this);
+            var href = link.attr("href");
+            if (!Webflow.validClick(evt.currentTarget)) {
+              evt.preventDefault();
+              return;
+            }
+            if (href && href.indexOf("#") === 0 && data.open) {
+              close(data);
+            }
+          };
+        }
+        function outside(data) {
+          if (data.outside) {
+            $doc.off("click" + namespace, data.outside);
+          }
+          return function(evt) {
+            var $target = $(evt.target);
+            if (inEditor && $target.closest(".w-editor-bem-EditorOverlay").length) {
+              return;
+            }
+            outsideDebounced(data, $target);
+          };
+        }
+        var outsideDebounced = debounce(function(data, $target) {
+          if (!data.open) {
+            return;
+          }
+          var menu = $target.closest(".w-nav-menu");
+          if (!data.menu.is(menu)) {
+            close(data);
+          }
+        });
+        function resize(i, el) {
+          var data = $.data(el, namespace);
+          var collapsed = data.collapsed = data.button.css("display") !== "none";
+          if (data.open && !collapsed && !designer) {
+            close(data, true);
+          }
+          if (data.container.length) {
+            var updateEachMax = updateMax(data);
+            data.links.each(updateEachMax);
+            data.dropdowns.each(updateEachMax);
+          }
+          if (data.open) {
+            setOverlayHeight(data);
+          }
+        }
+        var maxWidth = "max-width";
+        function updateMax(data) {
+          var containMax = data.container.css(maxWidth);
+          if (containMax === "none") {
+            containMax = "";
+          }
+          return function(i, link) {
+            link = $(link);
+            link.css(maxWidth, "");
+            if (link.css(maxWidth) === "none") {
+              link.css(maxWidth, containMax);
+            }
+          };
+        }
+        function addMenuOpen(i, el) {
+          el.setAttribute("data-nav-menu-open", "");
+        }
+        function removeMenuOpen(i, el) {
+          el.removeAttribute("data-nav-menu-open");
+        }
+        function open(data, immediate) {
+          if (data.open) {
+            return;
+          }
+          data.open = true;
+          data.menu.each(addMenuOpen);
+          data.links.addClass(navbarOpenedLink);
+          data.dropdowns.addClass(navbarOpenedDropdown);
+          data.dropdownToggle.addClass(navbarOpenedDropdownToggle);
+          data.dropdownList.addClass(navbarOpenedDropdownList);
+          data.button.addClass(navbarOpenedButton);
+          var config = data.config;
+          var animation = config.animation;
+          if (animation === "none" || !tram.support.transform || config.duration <= 0) {
+            immediate = true;
+          }
+          var bodyHeight = setOverlayHeight(data);
+          var menuHeight = data.menu.outerHeight(true);
+          var menuWidth = data.menu.outerWidth(true);
+          var navHeight = data.el.height();
+          var navbarEl = data.el[0];
+          resize(0, navbarEl);
+          ix.intro(0, navbarEl);
+          Webflow.redraw.up();
+          if (!designer) {
+            $doc.on("click" + namespace, data.outside);
+          }
+          if (immediate) {
+            complete();
+            return;
+          }
+          var transConfig = "transform " + config.duration + "ms " + config.easing;
+          if (data.overlay) {
+            menuSibling = data.menu.prev();
+            data.overlay.show().append(data.menu);
+          }
+          if (config.animOver) {
+            tram(data.menu).add(transConfig).set({
+              x: config.animDirect * menuWidth,
+              height: bodyHeight
+            }).start({
+              x: 0
+            }).then(complete);
+            data.overlay && data.overlay.width(menuWidth);
+            return;
+          }
+          var offsetY = navHeight + menuHeight;
+          tram(data.menu).add(transConfig).set({
+            y: -offsetY
+          }).start({
+            y: 0
+          }).then(complete);
+          function complete() {
+            data.button.attr("aria-expanded", "true");
+          }
+        }
+        function setOverlayHeight(data) {
+          var config = data.config;
+          var bodyHeight = config.docHeight ? $doc.height() : $body.height();
+          if (config.animOver) {
+            data.menu.height(bodyHeight);
+          } else if (data.el.css("position") !== "fixed") {
+            bodyHeight -= data.el.outerHeight(true);
+          }
+          data.overlay && data.overlay.height(bodyHeight);
+          return bodyHeight;
+        }
+        function close(data, immediate) {
+          if (!data.open) {
+            return;
+          }
+          data.open = false;
+          data.button.removeClass(navbarOpenedButton);
+          var config = data.config;
+          if (config.animation === "none" || !tram.support.transform || config.duration <= 0) {
+            immediate = true;
+          }
+          ix.outro(0, data.el[0]);
+          $doc.off("click" + namespace, data.outside);
+          if (immediate) {
+            tram(data.menu).stop();
+            complete();
+            return;
+          }
+          var transConfig = "transform " + config.duration + "ms " + config.easing2;
+          var menuHeight = data.menu.outerHeight(true);
+          var menuWidth = data.menu.outerWidth(true);
+          var navHeight = data.el.height();
+          if (config.animOver) {
+            tram(data.menu).add(transConfig).start({
+              x: menuWidth * config.animDirect
+            }).then(complete);
+            return;
+          }
+          var offsetY = navHeight + menuHeight;
+          tram(data.menu).add(transConfig).start({
+            y: -offsetY
+          }).then(complete);
+          function complete() {
+            data.menu.height("");
+            tram(data.menu).set({
+              x: 0,
+              y: 0
+            });
+            data.menu.each(removeMenuOpen);
+            data.links.removeClass(navbarOpenedLink);
+            data.dropdowns.removeClass(navbarOpenedDropdown);
+            data.dropdownToggle.removeClass(navbarOpenedDropdownToggle);
+            data.dropdownList.removeClass(navbarOpenedDropdownList);
+            if (data.overlay && data.overlay.children().length) {
+              menuSibling.length ? data.menu.insertAfter(menuSibling) : data.menu.prependTo(data.parent);
+              data.overlay.attr("style", "").hide();
+            }
+            data.el.triggerHandler("w-close");
+            data.button.attr("aria-expanded", "false");
+          }
+        }
+        return api;
+      });
+    }
+  });
+
   // <stdin>
-  require_webflow_scroll();
-  require_webflow_touch();
+  require_webflow_brand();
   require_webflow_focus_visible();
-  require_webflow_links();
   require_webflow_focus();
   require_webflow_ix2_events();
-  require_webflow_focus_within();
-  require_webflow_brand();
-  require_webflow_navbar();
   require_webflow_ix2();
+  require_webflow_links();
+  require_webflow_scroll();
+  require_webflow_touch();
   require_webflow_forms();
+  require_webflow_navbar();
 })();
 /*!
  * tram.js v0.8.2-global
@@ -13560,5 +13377,5 @@ timm/lib/timm.js:
  * Webflow: Interactions 2.0: Init
  */
 Webflow.require('ix2').init(
-{"events":{"e":{"id":"e","name":"","animationType":"custom","eventTypeId":"MOUSE_OVER","action":{"id":"","actionTypeId":"GENERAL_START_ACTION","config":{"delay":0,"easing":"","duration":0,"actionListId":"a","affectedElements":{},"playInReverse":false,"autoStopEventId":"e-2"}},"mediaQueries":["main","medium","small","tiny"],"target":{"id":"637f8609bfc3a8725d4cf3ad|a4785d04-0e05-8067-457b-d9ff66dbdc0e","appliesTo":"ELEMENT","styleBlockIds":[]},"targets":[{"id":"637f8609bfc3a8725d4cf3ad|a4785d04-0e05-8067-457b-d9ff66dbdc0e","appliesTo":"ELEMENT","styleBlockIds":[]}],"config":{"loop":false,"playInReverse":false,"scrollOffsetValue":null,"scrollOffsetUnit":null,"delay":null,"direction":null,"effectIn":null},"createdOn":1559210462430},"e-2":{"id":"e-2","name":"","animationType":"custom","eventTypeId":"MOUSE_OUT","action":{"id":"","actionTypeId":"GENERAL_START_ACTION","config":{"delay":0,"easing":"","duration":0,"actionListId":"a-2","affectedElements":{},"playInReverse":false,"autoStopEventId":"e"}},"mediaQueries":["main","medium","small","tiny"],"target":{"id":"637f8609bfc3a8725d4cf3ad|a4785d04-0e05-8067-457b-d9ff66dbdc0e","appliesTo":"ELEMENT","styleBlockIds":[]},"targets":[{"id":"637f8609bfc3a8725d4cf3ad|a4785d04-0e05-8067-457b-d9ff66dbdc0e","appliesTo":"ELEMENT","styleBlockIds":[]}],"config":{"loop":false,"playInReverse":false,"scrollOffsetValue":null,"scrollOffsetUnit":null,"delay":null,"direction":null,"effectIn":null},"createdOn":1559210462432},"e-4":{"id":"e-4","name":"","animationType":"custom","eventTypeId":"PAGE_FINISH","action":{"id":"","actionTypeId":"GENERAL_START_ACTION","config":{"delay":0,"easing":"","duration":0,"actionListId":"a-4","affectedElements":{},"playInReverse":false,"autoStopEventId":"e-3"}},"mediaQueries":["main","medium","small","tiny"],"target":{"id":"637f8609bfc3a8725d4cf3ad","appliesTo":"PAGE","styleBlockIds":[]},"targets":[{"id":"637f8609bfc3a8725d4cf3ad","appliesTo":"PAGE","styleBlockIds":[]}],"config":{"loop":false,"playInReverse":false,"scrollOffsetValue":null,"scrollOffsetUnit":null,"delay":null,"direction":null,"effectIn":null},"createdOn":1559212802388},"e-5":{"id":"e-5","name":"","animationType":"custom","eventTypeId":"PAGE_START","action":{"id":"","actionTypeId":"GENERAL_START_ACTION","config":{"delay":0,"easing":"","duration":0,"actionListId":"a-4","affectedElements":{},"playInReverse":false,"autoStopEventId":"e-6"}},"mediaQueries":["main","medium","small","tiny"],"target":{"id":"637f8609bfc3a8725d4cf3ad","appliesTo":"PAGE","styleBlockIds":[]},"targets":[{"id":"637f8609bfc3a8725d4cf3ad","appliesTo":"PAGE","styleBlockIds":[]}],"config":{"loop":false,"playInReverse":false,"scrollOffsetValue":null,"scrollOffsetUnit":null,"delay":null,"direction":null,"effectIn":null},"createdOn":1559214705022},"e-8":{"id":"e-8","name":"","animationType":"custom","eventTypeId":"PAGE_FINISH","action":{"id":"","actionTypeId":"GENERAL_START_ACTION","config":{"delay":0,"easing":"","duration":0,"actionListId":"a-5","affectedElements":{},"playInReverse":false,"autoStopEventId":"e-7"}},"mediaQueries":["main","medium"],"target":{"id":"637f8609bfc3a8725d4cf3ad","appliesTo":"PAGE","styleBlockIds":[]},"targets":[{"id":"637f8609bfc3a8725d4cf3ad","appliesTo":"PAGE","styleBlockIds":[]}],"config":{"loop":true,"playInReverse":false,"scrollOffsetValue":null,"scrollOffsetUnit":null,"delay":null,"direction":null,"effectIn":null},"createdOn":1559301984756},"e-13":{"id":"e-13","name":"","animationType":"custom","eventTypeId":"MOUSE_OVER","action":{"id":"","actionTypeId":"GENERAL_START_ACTION","config":{"delay":0,"easing":"","duration":0,"actionListId":"a","affectedElements":{},"playInReverse":false,"autoStopEventId":"e-14"}},"mediaQueries":["main","medium","small","tiny"],"target":{"id":"23f4a6b9-d84d-4ca4-5e68-7e3d2a5de906","appliesTo":"ELEMENT","styleBlockIds":[]},"targets":[{"id":"23f4a6b9-d84d-4ca4-5e68-7e3d2a5de906","appliesTo":"ELEMENT","styleBlockIds":[]}],"config":{"loop":false,"playInReverse":false,"scrollOffsetValue":null,"scrollOffsetUnit":null,"delay":null,"direction":null,"effectIn":null},"createdOn":1559321618704},"e-14":{"id":"e-14","name":"","animationType":"custom","eventTypeId":"MOUSE_OUT","action":{"id":"","actionTypeId":"GENERAL_START_ACTION","config":{"delay":0,"easing":"","duration":0,"actionListId":"a-2","affectedElements":{},"playInReverse":false,"autoStopEventId":"e-13"}},"mediaQueries":["main","medium","small","tiny"],"target":{"id":"23f4a6b9-d84d-4ca4-5e68-7e3d2a5de906","appliesTo":"ELEMENT","styleBlockIds":[]},"targets":[{"id":"23f4a6b9-d84d-4ca4-5e68-7e3d2a5de906","appliesTo":"ELEMENT","styleBlockIds":[]}],"config":{"loop":false,"playInReverse":false,"scrollOffsetValue":null,"scrollOffsetUnit":null,"delay":null,"direction":null,"effectIn":null},"createdOn":1559321618704},"e-15":{"id":"e-15","name":"","animationType":"custom","eventTypeId":"MOUSE_OVER","action":{"id":"","actionTypeId":"GENERAL_START_ACTION","config":{"delay":0,"easing":"","duration":0,"actionListId":"a-6","affectedElements":{},"playInReverse":false,"autoStopEventId":"e-16"}},"mediaQueries":["main"],"target":{"id":"23f4a6b9-d84d-4ca4-5e68-7e3d2a5de90a","appliesTo":"ELEMENT","styleBlockIds":[]},"targets":[{"id":"23f4a6b9-d84d-4ca4-5e68-7e3d2a5de90a","appliesTo":"ELEMENT","styleBlockIds":[]}],"config":{"loop":false,"playInReverse":false,"scrollOffsetValue":null,"scrollOffsetUnit":null,"delay":null,"direction":null,"effectIn":null},"createdOn":1559321618704},"e-16":{"id":"e-16","name":"","animationType":"custom","eventTypeId":"MOUSE_OUT","action":{"id":"","actionTypeId":"GENERAL_START_ACTION","config":{"delay":0,"easing":"","duration":0,"actionListId":"a-7","affectedElements":{},"playInReverse":false,"autoStopEventId":"e-15"}},"mediaQueries":["main"],"target":{"id":"23f4a6b9-d84d-4ca4-5e68-7e3d2a5de90a","appliesTo":"ELEMENT","styleBlockIds":[]},"targets":[{"id":"23f4a6b9-d84d-4ca4-5e68-7e3d2a5de90a","appliesTo":"ELEMENT","styleBlockIds":[]}],"config":{"loop":false,"playInReverse":false,"scrollOffsetValue":null,"scrollOffsetUnit":null,"delay":null,"direction":null,"effectIn":null},"createdOn":1559321618704},"e-19":{"id":"e-19","name":"","animationType":"custom","eventTypeId":"SCROLL_INTO_VIEW","action":{"id":"","actionTypeId":"GENERAL_START_ACTION","config":{"delay":0,"easing":"","duration":0,"actionListId":"a-8","affectedElements":{},"playInReverse":false,"autoStopEventId":"e-20"}},"mediaQueries":["main","medium","small","tiny"],"target":{"id":"f4f04428-8e83-23ee-dfff-02c24ace3d00","appliesTo":"ELEMENT","styleBlockIds":[]},"targets":[{"id":"f4f04428-8e83-23ee-dfff-02c24ace3d00","appliesTo":"ELEMENT","styleBlockIds":[]}],"config":{"loop":false,"playInReverse":false,"scrollOffsetValue":20,"scrollOffsetUnit":"%","delay":null,"direction":null,"effectIn":null},"createdOn":1559325123417},"e-23":{"id":"e-23","name":"","animationType":"preset","eventTypeId":"SCROLL_INTO_VIEW","action":{"id":"","actionTypeId":"SLIDE_EFFECT","instant":false,"config":{"actionListId":"slideInBottom","autoStopEventId":"e-24"}},"mediaQueries":["main","medium","small","tiny"],"target":{"id":"f4f04428-8e83-23ee-dfff-02c24ace3cfd","appliesTo":"ELEMENT","styleBlockIds":[]},"targets":[{"id":"f4f04428-8e83-23ee-dfff-02c24ace3cfd","appliesTo":"ELEMENT","styleBlockIds":[]}],"config":{"loop":false,"playInReverse":false,"scrollOffsetValue":10,"scrollOffsetUnit":"%","delay":0,"direction":"BOTTOM","effectIn":true},"createdOn":1559325355481},"e-27":{"id":"e-27","name":"","animationType":"preset","eventTypeId":"SCROLL_INTO_VIEW","action":{"id":"","actionTypeId":"SLIDE_EFFECT","instant":false,"config":{"actionListId":"slideInBottom","autoStopEventId":"e-28"}},"mediaQueries":["main","medium","small","tiny"],"target":{"id":"f4f04428-8e83-23ee-dfff-02c24ace3d04","appliesTo":"ELEMENT","styleBlockIds":[]},"targets":[{"id":"f4f04428-8e83-23ee-dfff-02c24ace3d04","appliesTo":"ELEMENT","styleBlockIds":[]}],"config":{"loop":false,"playInReverse":false,"scrollOffsetValue":10,"scrollOffsetUnit":"%","delay":200,"direction":"BOTTOM","effectIn":true},"createdOn":1559673099736},"e-29":{"id":"e-29","name":"","animationType":"custom","eventTypeId":"PAGE_START","action":{"id":"","actionTypeId":"GENERAL_START_ACTION","config":{"delay":0,"easing":"","duration":0,"actionListId":"a-11","affectedElements":{},"playInReverse":false,"autoStopEventId":"e-30"}},"mediaQueries":["main","medium","small","tiny"],"target":{"id":"637f8609bfc3a83df44cf3ae","appliesTo":"PAGE","styleBlockIds":[]},"targets":[{"id":"637f8609bfc3a83df44cf3ae","appliesTo":"PAGE","styleBlockIds":[]}],"config":{"loop":false,"playInReverse":false,"scrollOffsetValue":null,"scrollOffsetUnit":null,"delay":null,"direction":null,"effectIn":null},"createdOn":1559734452455},"e-31":{"id":"e-31","name":"","animationType":"preset","eventTypeId":"SCROLL_INTO_VIEW","action":{"id":"","actionTypeId":"SLIDE_EFFECT","instant":false,"config":{"actionListId":"slideInBottom","autoStopEventId":"e-32"}},"mediaQueries":["main","medium","small","tiny"],"target":{"id":"637f8609bfc3a8725d4cf3ad|cc9f3a7c-b70a-9255-0e6e-7503bb02bd60","appliesTo":"ELEMENT","styleBlockIds":[]},"targets":[{"id":"637f8609bfc3a8725d4cf3ad|cc9f3a7c-b70a-9255-0e6e-7503bb02bd60","appliesTo":"ELEMENT","styleBlockIds":[]}],"config":{"loop":false,"playInReverse":false,"scrollOffsetValue":20,"scrollOffsetUnit":"%","delay":0,"direction":"BOTTOM","effectIn":true},"createdOn":1676213767330},"e-33":{"id":"e-33","name":"","animationType":"preset","eventTypeId":"SCROLL_INTO_VIEW","action":{"id":"","actionTypeId":"GENERAL_START_ACTION","config":{"delay":0,"easing":"","duration":0,"actionListId":"a-8","affectedElements":{},"playInReverse":false,"autoStopEventId":"e-34"}},"mediaQueries":["main","medium","small","tiny"],"target":{"id":"637f8609bfc3a8725d4cf3ad|cc9f3a7c-b70a-9255-0e6e-7503bb02bd63","appliesTo":"ELEMENT","styleBlockIds":[]},"targets":[{"id":"637f8609bfc3a8725d4cf3ad|cc9f3a7c-b70a-9255-0e6e-7503bb02bd63","appliesTo":"ELEMENT","styleBlockIds":[]}],"config":{"loop":false,"playInReverse":false,"scrollOffsetValue":30,"scrollOffsetUnit":"%","delay":null,"direction":null,"effectIn":null},"createdOn":1676213767330},"e-35":{"id":"e-35","name":"","animationType":"preset","eventTypeId":"SCROLL_INTO_VIEW","action":{"id":"","actionTypeId":"SLIDE_EFFECT","instant":false,"config":{"actionListId":"slideInBottom","autoStopEventId":"e-55"}},"mediaQueries":["main","medium","small","tiny"],"target":{"id":"637f8609bfc3a8725d4cf3ad|cc9f3a7c-b70a-9255-0e6e-7503bb02bd67","appliesTo":"ELEMENT","styleBlockIds":[]},"targets":[{"id":"637f8609bfc3a8725d4cf3ad|cc9f3a7c-b70a-9255-0e6e-7503bb02bd67","appliesTo":"ELEMENT","styleBlockIds":[]}],"config":{"loop":false,"playInReverse":false,"scrollOffsetValue":20,"scrollOffsetUnit":"%","delay":200,"direction":"BOTTOM","effectIn":true},"createdOn":1676213767330},"e-37":{"id":"e-37","name":"","animationType":"custom","eventTypeId":"SCROLLING_IN_VIEW","action":{"id":"","actionTypeId":"GENERAL_CONTINUOUS_ACTION","config":{"actionListId":"a-12","affectedElements":{},"duration":0}},"mediaQueries":["main","medium","small","tiny"],"target":{"selector":".c-card","originalId":"637f8609bfc3a8725d4cf3ad|6020dc6c-9d7b-4059-5b10-702e04706fbd","appliesTo":"CLASS"},"targets":[{"selector":".c-card","originalId":"637f8609bfc3a8725d4cf3ad|6020dc6c-9d7b-4059-5b10-702e04706fbd","appliesTo":"CLASS"}],"config":[{"continuousParameterGroupId":"a-12-p","smoothing":90,"startsEntering":true,"addStartOffset":false,"addOffsetValue":50,"startsExiting":false,"addEndOffset":false,"endOffsetValue":50}],"createdOn":1603881512796},"e-38":{"id":"e-38","name":"","animationType":"preset","eventTypeId":"MOUSE_OVER","action":{"id":"","actionTypeId":"GENERAL_START_ACTION","config":{"delay":0,"easing":"","duration":0,"actionListId":"a","affectedElements":{},"playInReverse":false,"autoStopEventId":"e-56"}},"mediaQueries":["main","medium","small","tiny"],"target":{"id":"637f8609bfc3a8725d4cf3ad|22a5306f-0652-2884-56c5-c6811ef34fe2","appliesTo":"ELEMENT","styleBlockIds":[]},"targets":[{"id":"637f8609bfc3a8725d4cf3ad|22a5306f-0652-2884-56c5-c6811ef34fe2","appliesTo":"ELEMENT","styleBlockIds":[]}],"config":{"loop":false,"playInReverse":false,"scrollOffsetValue":null,"scrollOffsetUnit":null,"delay":null,"direction":null,"effectIn":null},"createdOn":1676308482207},"e-39":{"id":"e-39","name":"","animationType":"preset","eventTypeId":"MOUSE_OUT","action":{"id":"","actionTypeId":"GENERAL_START_ACTION","config":{"delay":0,"easing":"","duration":0,"actionListId":"a-2","affectedElements":{},"playInReverse":false,"autoStopEventId":"e-38"}},"mediaQueries":["main","medium","small","tiny"],"target":{"id":"637f8609bfc3a8725d4cf3ad|22a5306f-0652-2884-56c5-c6811ef34fe2","appliesTo":"ELEMENT","styleBlockIds":[]},"targets":[{"id":"637f8609bfc3a8725d4cf3ad|22a5306f-0652-2884-56c5-c6811ef34fe2","appliesTo":"ELEMENT","styleBlockIds":[]}],"config":{"loop":false,"playInReverse":false,"scrollOffsetValue":null,"scrollOffsetUnit":null,"delay":null,"direction":null,"effectIn":null},"createdOn":1676308482207},"e-40":{"id":"e-40","name":"","animationType":"preset","eventTypeId":"MOUSE_OVER","action":{"id":"","actionTypeId":"GENERAL_START_ACTION","config":{"delay":0,"easing":"","duration":0,"actionListId":"a","affectedElements":{},"playInReverse":false,"autoStopEventId":"e-41"}},"mediaQueries":["main","medium","small","tiny"],"target":{"id":"637f8609bfc3a8725d4cf3ad|9999a556-f326-fe72-e3ed-c50b7cc8f11a","appliesTo":"ELEMENT","styleBlockIds":[]},"targets":[{"id":"637f8609bfc3a8725d4cf3ad|9999a556-f326-fe72-e3ed-c50b7cc8f11a","appliesTo":"ELEMENT","styleBlockIds":[]}],"config":{"loop":false,"playInReverse":false,"scrollOffsetValue":null,"scrollOffsetUnit":null,"delay":null,"direction":null,"effectIn":null},"createdOn":1676309612677},"e-41":{"id":"e-41","name":"","animationType":"preset","eventTypeId":"MOUSE_OUT","action":{"id":"","actionTypeId":"GENERAL_START_ACTION","config":{"delay":0,"easing":"","duration":0,"actionListId":"a-2","affectedElements":{},"playInReverse":false,"autoStopEventId":"e-57"}},"mediaQueries":["main","medium","small","tiny"],"target":{"id":"637f8609bfc3a8725d4cf3ad|9999a556-f326-fe72-e3ed-c50b7cc8f11a","appliesTo":"ELEMENT","styleBlockIds":[]},"targets":[{"id":"637f8609bfc3a8725d4cf3ad|9999a556-f326-fe72-e3ed-c50b7cc8f11a","appliesTo":"ELEMENT","styleBlockIds":[]}],"config":{"loop":false,"playInReverse":false,"scrollOffsetValue":null,"scrollOffsetUnit":null,"delay":null,"direction":null,"effectIn":null},"createdOn":1676309612677},"e-46":{"id":"e-46","name":"","animationType":"preset","eventTypeId":"MOUSE_OVER","action":{"id":"","actionTypeId":"GENERAL_START_ACTION","config":{"delay":0,"easing":"","duration":0,"actionListId":"a","affectedElements":{},"playInReverse":false,"autoStopEventId":"e-47"}},"mediaQueries":["main","medium","small","tiny"],"target":{"id":"637f8609bfc3a8725d4cf3ad|8961528e-ad8b-f8de-dba7-edb4c0cd7345","appliesTo":"ELEMENT","styleBlockIds":[]},"targets":[{"id":"637f8609bfc3a8725d4cf3ad|8961528e-ad8b-f8de-dba7-edb4c0cd7345","appliesTo":"ELEMENT","styleBlockIds":[]}],"config":{"loop":false,"playInReverse":false,"scrollOffsetValue":null,"scrollOffsetUnit":null,"delay":null,"direction":null,"effectIn":null},"createdOn":1676311082682},"e-47":{"id":"e-47","name":"","animationType":"preset","eventTypeId":"MOUSE_OUT","action":{"id":"","actionTypeId":"GENERAL_START_ACTION","config":{"delay":0,"easing":"","duration":0,"actionListId":"a-2","affectedElements":{},"playInReverse":false,"autoStopEventId":"e-46"}},"mediaQueries":["main","medium","small","tiny"],"target":{"id":"637f8609bfc3a8725d4cf3ad|8961528e-ad8b-f8de-dba7-edb4c0cd7345","appliesTo":"ELEMENT","styleBlockIds":[]},"targets":[{"id":"637f8609bfc3a8725d4cf3ad|8961528e-ad8b-f8de-dba7-edb4c0cd7345","appliesTo":"ELEMENT","styleBlockIds":[]}],"config":{"loop":false,"playInReverse":false,"scrollOffsetValue":null,"scrollOffsetUnit":null,"delay":null,"direction":null,"effectIn":null},"createdOn":1676311082682},"e-48":{"id":"e-48","name":"","animationType":"custom","eventTypeId":"MOUSE_OVER","action":{"id":"","actionTypeId":"GENERAL_START_ACTION","config":{"delay":0,"easing":"","duration":0,"actionListId":"a-13","affectedElements":{},"playInReverse":false,"autoStopEventId":"e-49"}},"mediaQueries":["main","medium","small","tiny"],"target":{"id":"63fdf4853e4e4d1602da4d95|1cf5bc1d-ddb0-2129-ffaa-07603b8a6d84","appliesTo":"ELEMENT","styleBlockIds":[]},"targets":[{"id":"63fdf4853e4e4d1602da4d95|1cf5bc1d-ddb0-2129-ffaa-07603b8a6d84","appliesTo":"ELEMENT","styleBlockIds":[]}],"config":{"loop":false,"playInReverse":false,"scrollOffsetValue":null,"scrollOffsetUnit":null,"delay":null,"direction":null,"effectIn":null},"createdOn":1677589419970},"e-49":{"id":"e-49","name":"","animationType":"custom","eventTypeId":"MOUSE_OUT","action":{"id":"","actionTypeId":"GENERAL_START_ACTION","config":{"delay":0,"easing":"","duration":0,"actionListId":"a-14","affectedElements":{},"playInReverse":false,"autoStopEventId":"e-48"}},"mediaQueries":["main","medium","small","tiny"],"target":{"id":"63fdf4853e4e4d1602da4d95|1cf5bc1d-ddb0-2129-ffaa-07603b8a6d84","appliesTo":"ELEMENT","styleBlockIds":[]},"targets":[{"id":"63fdf4853e4e4d1602da4d95|1cf5bc1d-ddb0-2129-ffaa-07603b8a6d84","appliesTo":"ELEMENT","styleBlockIds":[]}],"config":{"loop":false,"playInReverse":false,"scrollOffsetValue":null,"scrollOffsetUnit":null,"delay":null,"direction":null,"effectIn":null},"createdOn":1677589419971},"e-50":{"id":"e-50","name":"","animationType":"preset","eventTypeId":"MOUSE_OVER","action":{"id":"","actionTypeId":"GENERAL_START_ACTION","config":{"delay":0,"easing":"","duration":0,"actionListId":"a-13","affectedElements":{},"playInReverse":false,"autoStopEventId":"e-51"}},"mediaQueries":["main","medium","small","tiny"],"target":{"id":"63fe013f0e89506aedea891d|1cf5bc1d-ddb0-2129-ffaa-07603b8a6d84","appliesTo":"ELEMENT","styleBlockIds":[]},"targets":[{"id":"63fe013f0e89506aedea891d|1cf5bc1d-ddb0-2129-ffaa-07603b8a6d84","appliesTo":"ELEMENT","styleBlockIds":[]}],"config":{"loop":false,"playInReverse":false,"scrollOffsetValue":null,"scrollOffsetUnit":null,"delay":null,"direction":null,"effectIn":null},"createdOn":1677590847917},"e-51":{"id":"e-51","name":"","animationType":"preset","eventTypeId":"MOUSE_OUT","action":{"id":"","actionTypeId":"GENERAL_START_ACTION","config":{"delay":0,"easing":"","duration":0,"actionListId":"a-14","affectedElements":{},"playInReverse":false,"autoStopEventId":"e-50"}},"mediaQueries":["main","medium","small","tiny"],"target":{"id":"63fe013f0e89506aedea891d|1cf5bc1d-ddb0-2129-ffaa-07603b8a6d84","appliesTo":"ELEMENT","styleBlockIds":[]},"targets":[{"id":"63fe013f0e89506aedea891d|1cf5bc1d-ddb0-2129-ffaa-07603b8a6d84","appliesTo":"ELEMENT","styleBlockIds":[]}],"config":{"loop":false,"playInReverse":false,"scrollOffsetValue":null,"scrollOffsetUnit":null,"delay":null,"direction":null,"effectIn":null},"createdOn":1677590847917},"e-52":{"id":"e-52","name":"","animationType":"preset","eventTypeId":"MOUSE_OVER","action":{"id":"","actionTypeId":"GENERAL_START_ACTION","config":{"delay":0,"easing":"","duration":0,"actionListId":"a","affectedElements":{},"playInReverse":false,"autoStopEventId":"e-53"}},"mediaQueries":["main","medium","small","tiny"],"target":{"id":"637f8609bfc3a8725d4cf3ad|3c36b408-6edb-a947-ae21-e4d0550f7f21","appliesTo":"ELEMENT","styleBlockIds":[]},"targets":[{"id":"637f8609bfc3a8725d4cf3ad|3c36b408-6edb-a947-ae21-e4d0550f7f21","appliesTo":"ELEMENT","styleBlockIds":[]}],"config":{"loop":false,"playInReverse":false,"scrollOffsetValue":null,"scrollOffsetUnit":null,"delay":null,"direction":null,"effectIn":null},"createdOn":1679498830689},"e-53":{"id":"e-53","name":"","animationType":"preset","eventTypeId":"MOUSE_OUT","action":{"id":"","actionTypeId":"GENERAL_START_ACTION","config":{"delay":0,"easing":"","duration":0,"actionListId":"a-2","affectedElements":{},"playInReverse":false,"autoStopEventId":"e-52"}},"mediaQueries":["main","medium","small","tiny"],"target":{"id":"637f8609bfc3a8725d4cf3ad|3c36b408-6edb-a947-ae21-e4d0550f7f21","appliesTo":"ELEMENT","styleBlockIds":[]},"targets":[{"id":"637f8609bfc3a8725d4cf3ad|3c36b408-6edb-a947-ae21-e4d0550f7f21","appliesTo":"ELEMENT","styleBlockIds":[]}],"config":{"loop":false,"playInReverse":false,"scrollOffsetValue":null,"scrollOffsetUnit":null,"delay":null,"direction":null,"effectIn":null},"createdOn":1679498830689},"e-54":{"id":"e-54","name":"","animationType":"custom","eventTypeId":"MOUSE_OVER","action":{"id":"","actionTypeId":"GENERAL_START_ACTION","config":{"delay":0,"easing":"","duration":0,"actionListId":"a-16","affectedElements":{},"playInReverse":false,"autoStopEventId":"e-55"}},"mediaQueries":["main"],"target":{"selector":".b-image","originalId":"641c2149c2f5a9d037cb1ea2|48cbf837-b940-f940-f8e4-4ff3c4f97fb9","appliesTo":"CLASS"},"targets":[{"selector":".b-image","originalId":"641c2149c2f5a9d037cb1ea2|48cbf837-b940-f940-f8e4-4ff3c4f97fb9","appliesTo":"CLASS"}],"config":{"loop":false,"playInReverse":false,"scrollOffsetValue":null,"scrollOffsetUnit":null,"delay":null,"direction":null,"effectIn":null},"createdOn":1603177519534},"e-55":{"id":"e-55","name":"","animationType":"custom","eventTypeId":"MOUSE_OUT","action":{"id":"","actionTypeId":"GENERAL_START_ACTION","config":{"delay":0,"easing":"","duration":0,"actionListId":"a-17","affectedElements":{},"playInReverse":false,"autoStopEventId":"e-54"}},"mediaQueries":["main"],"target":{"selector":".b-image","originalId":"641c2149c2f5a9d037cb1ea2|48cbf837-b940-f940-f8e4-4ff3c4f97fb9","appliesTo":"CLASS"},"targets":[{"selector":".b-image","originalId":"641c2149c2f5a9d037cb1ea2|48cbf837-b940-f940-f8e4-4ff3c4f97fb9","appliesTo":"CLASS"}],"config":{"loop":false,"playInReverse":false,"scrollOffsetValue":null,"scrollOffsetUnit":null,"delay":null,"direction":null,"effectIn":null},"createdOn":1603177519534},"e-56":{"id":"e-56","name":"","animationType":"custom","eventTypeId":"MOUSE_CLICK","action":{"id":"","actionTypeId":"GENERAL_START_ACTION","config":{"delay":0,"easing":"","duration":0,"actionListId":"a-18","affectedElements":{},"playInReverse":false,"autoStopEventId":"e-57"}},"mediaQueries":["main"],"target":{"selector":".b-image","originalId":"641c2149c2f5a9d037cb1ea2|48cbf837-b940-f940-f8e4-4ff3c4f97fb9","appliesTo":"CLASS"},"targets":[{"selector":".b-image","originalId":"641c2149c2f5a9d037cb1ea2|48cbf837-b940-f940-f8e4-4ff3c4f97fb9","appliesTo":"CLASS"}],"config":{"loop":false,"playInReverse":false,"scrollOffsetValue":null,"scrollOffsetUnit":null,"delay":null,"direction":null,"effectIn":null},"createdOn":1603180268757},"e-58":{"id":"e-58","name":"","animationType":"custom","eventTypeId":"MOUSE_CLICK","action":{"id":"","actionTypeId":"GENERAL_START_ACTION","config":{"delay":0,"easing":"","duration":0,"actionListId":"a-19","affectedElements":{},"playInReverse":false,"autoStopEventId":"e-59"}},"mediaQueries":["main"],"target":{"selector":".ci-zoom-in-img","originalId":"641c2149c2f5a9d037cb1ea2|41c40855-99fb-14aa-1f59-181254d0a1eb","appliesTo":"CLASS"},"targets":[{"selector":".ci-zoom-in-img","originalId":"641c2149c2f5a9d037cb1ea2|41c40855-99fb-14aa-1f59-181254d0a1eb","appliesTo":"CLASS"}],"config":{"loop":false,"playInReverse":false,"scrollOffsetValue":null,"scrollOffsetUnit":null,"delay":null,"direction":null,"effectIn":null},"createdOn":1603184046448},"e-60":{"id":"e-60","name":"","animationType":"custom","eventTypeId":"MOUSE_MOVE","action":{"id":"","actionTypeId":"GENERAL_CONTINUOUS_ACTION","config":{"actionListId":"a-20","affectedElements":{},"duration":0}},"mediaQueries":["main"],"target":{"selector":".b-zoom-in-img","originalId":"641c2149c2f5a9d037cb1ea2|41c40855-99fb-14aa-1f59-181254d0a1f0","appliesTo":"CLASS"},"targets":[{"selector":".b-zoom-in-img","originalId":"641c2149c2f5a9d037cb1ea2|41c40855-99fb-14aa-1f59-181254d0a1f0","appliesTo":"CLASS"}],"config":[{"continuousParameterGroupId":"a-20-p","selectedAxis":"X_AXIS","basedOn":"ELEMENT","reverse":false,"smoothing":90,"restingState":50},{"continuousParameterGroupId":"a-20-p-2","selectedAxis":"Y_AXIS","basedOn":"ELEMENT","reverse":false,"smoothing":90,"restingState":50}],"createdOn":1603184046448},"e-61":{"id":"e-61","name":"","animationType":"custom","eventTypeId":"MOUSE_OVER","action":{"id":"","actionTypeId":"GENERAL_START_ACTION","config":{"delay":0,"easing":"","duration":0,"actionListId":"a-21","affectedElements":{},"playInReverse":false,"autoStopEventId":"e-62"}},"mediaQueries":["main"],"target":{"selector":".b-image","originalId":"642870890da4494ba5f81eb3|05f62928-2792-28fe-f0e3-dcace09043cf","appliesTo":"CLASS"},"targets":[{"selector":".b-image","originalId":"642870890da4494ba5f81eb3|05f62928-2792-28fe-f0e3-dcace09043cf","appliesTo":"CLASS"}],"config":{"loop":false,"playInReverse":false,"scrollOffsetValue":null,"scrollOffsetUnit":null,"delay":null,"direction":null,"effectIn":null},"createdOn":1603177519534},"e-62":{"id":"e-62","name":"","animationType":"custom","eventTypeId":"MOUSE_OUT","action":{"id":"","actionTypeId":"GENERAL_START_ACTION","config":{"delay":0,"easing":"","duration":0,"actionListId":"a-22","affectedElements":{},"playInReverse":false,"autoStopEventId":"e-61"}},"mediaQueries":["main"],"target":{"selector":".b-image","originalId":"642870890da4494ba5f81eb3|05f62928-2792-28fe-f0e3-dcace09043cf","appliesTo":"CLASS"},"targets":[{"selector":".b-image","originalId":"642870890da4494ba5f81eb3|05f62928-2792-28fe-f0e3-dcace09043cf","appliesTo":"CLASS"}],"config":{"loop":false,"playInReverse":false,"scrollOffsetValue":null,"scrollOffsetUnit":null,"delay":null,"direction":null,"effectIn":null},"createdOn":1603177519534},"e-63":{"id":"e-63","name":"","animationType":"preset","eventTypeId":"MOUSE_OVER","action":{"id":"","actionTypeId":"GENERAL_START_ACTION","config":{"delay":0,"easing":"","duration":0,"actionListId":"a","affectedElements":{},"playInReverse":false,"autoStopEventId":"e-64"}},"mediaQueries":["main","medium","small","tiny"],"target":{"id":"637f8609bfc3a8725d4cf3ad|90871753-0c94-b657-616c-dbec2bea4db4","appliesTo":"ELEMENT","styleBlockIds":[]},"targets":[],"config":{"loop":false,"playInReverse":false,"scrollOffsetValue":null,"scrollOffsetUnit":null,"delay":null,"direction":null,"effectIn":null},"createdOn":1681812961311},"e-64":{"id":"e-64","name":"","animationType":"preset","eventTypeId":"MOUSE_OUT","action":{"id":"","actionTypeId":"GENERAL_START_ACTION","config":{"delay":0,"easing":"","duration":0,"actionListId":"a-2","affectedElements":{},"playInReverse":false,"autoStopEventId":"e-63"}},"mediaQueries":["main","medium","small","tiny"],"target":{"id":"637f8609bfc3a8725d4cf3ad|90871753-0c94-b657-616c-dbec2bea4db4","appliesTo":"ELEMENT","styleBlockIds":[]},"targets":[],"config":{"loop":false,"playInReverse":false,"scrollOffsetValue":null,"scrollOffsetUnit":null,"delay":null,"direction":null,"effectIn":null},"createdOn":1681812961311}},"actionLists":{"a":{"id":"a","title":"Button Move","actionItemGroups":[{"actionItems":[{"id":"a-n-2","actionTypeId":"TRANSFORM_MOVE","config":{"delay":0,"easing":"outQuad","duration":400,"target":{"useEventTarget":"CHILDREN","selector":".button","selectorGuids":["d052fb55-db42-5ceb-0051-9e25cb9ecf45"]},"xValue":-8,"yValue":-8,"xUnit":"PX","yUnit":"PX","zUnit":"PX"}}]},{"actionItems":[{"id":"a-n","actionTypeId":"TRANSFORM_MOVE","config":{"delay":0,"easing":"outQuad","duration":200,"target":{"useEventTarget":"CHILDREN","selector":".button","selectorGuids":["d052fb55-db42-5ceb-0051-9e25cb9ecf45"]},"xValue":0,"yValue":0,"xUnit":"PX","yUnit":"PX","zUnit":"PX"}}]}],"useFirstGroupAsInitialState":true,"createdOn":1559210468582},"a-2":{"id":"a-2","title":"Button Return","actionItemGroups":[{"actionItems":[{"id":"a-2-n","actionTypeId":"TRANSFORM_MOVE","config":{"delay":0,"easing":"outQuad","duration":200,"target":{"useEventTarget":"CHILDREN","selector":".button","selectorGuids":["d052fb55-db42-5ceb-0051-9e25cb9ecf45"]},"xValue":-8,"yValue":-8,"xUnit":"PX","yUnit":"PX","zUnit":"PX"}}]}],"useFirstGroupAsInitialState":false,"createdOn":1559210468582},"a-4":{"id":"a-4","title":"Content Slide In","actionItemGroups":[{"actionItems":[{"id":"a-4-n","actionTypeId":"TRANSFORM_MOVE","config":{"delay":0,"easing":"","duration":500,"target":{"id":"637f8609bfc3a8725d4cf3ad|4d25a190-de63-e23d-efe3-a29000c37211"},"yValue":60,"xUnit":"PX","yUnit":"PX","zUnit":"PX"}},{"id":"a-4-n-10","actionTypeId":"STYLE_OPACITY","config":{"delay":0,"easing":"","duration":500,"target":{"id":"637f8609bfc3a8725d4cf3ad|a4785d04-0e05-8067-457b-d9ff66dbdc0e"},"value":0,"unit":""}},{"id":"a-4-n-9","actionTypeId":"TRANSFORM_MOVE","config":{"delay":0,"easing":"","duration":500,"target":{"id":"637f8609bfc3a8725d4cf3ad|a4785d04-0e05-8067-457b-d9ff66dbdc0e"},"yValue":60,"xUnit":"PX","yUnit":"PX","zUnit":"PX"}},{"id":"a-4-n-6","actionTypeId":"STYLE_OPACITY","config":{"delay":0,"easing":"","duration":500,"target":{"id":"637f8609bfc3a8725d4cf3ad|22bdcc57-2556-cdbf-cbc3-a0a201a6607d"},"value":0,"unit":""}},{"id":"a-4-n-5","actionTypeId":"TRANSFORM_MOVE","config":{"delay":0,"easing":"","duration":500,"target":{"id":"637f8609bfc3a8725d4cf3ad|22bdcc57-2556-cdbf-cbc3-a0a201a6607d"},"yValue":60,"xUnit":"PX","yUnit":"PX","zUnit":"PX"}},{"id":"a-4-n-3","actionTypeId":"STYLE_OPACITY","config":{"delay":0,"easing":"","duration":500,"target":{"id":"637f8609bfc3a8725d4cf3ad|4d25a190-de63-e23d-efe3-a29000c37211"},"value":0,"unit":""}}]},{"actionItems":[{"id":"a-4-n-2","actionTypeId":"TRANSFORM_MOVE","config":{"delay":0,"easing":"ease","duration":800,"target":{"id":"637f8609bfc3a8725d4cf3ad|4d25a190-de63-e23d-efe3-a29000c37211"},"yValue":0,"xUnit":"PX","yUnit":"PX","zUnit":"PX"}},{"id":"a-4-n-4","actionTypeId":"STYLE_OPACITY","config":{"delay":0,"easing":"ease","duration":800,"target":{"id":"637f8609bfc3a8725d4cf3ad|4d25a190-de63-e23d-efe3-a29000c37211"},"value":1,"unit":""}},{"id":"a-4-n-7","actionTypeId":"TRANSFORM_MOVE","config":{"delay":200,"easing":"ease","duration":800,"target":{"id":"637f8609bfc3a8725d4cf3ad|22bdcc57-2556-cdbf-cbc3-a0a201a6607d"},"yValue":0,"xUnit":"PX","yUnit":"PX","zUnit":"PX"}},{"id":"a-4-n-8","actionTypeId":"STYLE_OPACITY","config":{"delay":200,"easing":"ease","duration":800,"target":{"id":"637f8609bfc3a8725d4cf3ad|22bdcc57-2556-cdbf-cbc3-a0a201a6607d"},"value":1,"unit":""}},{"id":"a-4-n-12","actionTypeId":"STYLE_OPACITY","config":{"delay":200,"easing":"ease","duration":800,"target":{"id":"637f8609bfc3a8725d4cf3ad|a4785d04-0e05-8067-457b-d9ff66dbdc0e"},"value":1,"unit":""}},{"id":"a-4-n-11","actionTypeId":"TRANSFORM_MOVE","config":{"delay":200,"easing":"ease","duration":800,"target":{"id":"637f8609bfc3a8725d4cf3ad|a4785d04-0e05-8067-457b-d9ff66dbdc0e"},"yValue":0,"xUnit":"PX","yUnit":"PX","zUnit":"PX"}}]}],"useFirstGroupAsInitialState":true,"createdOn":1559214715842},"a-5":{"id":"a-5","title":"Scroll Line","actionItemGroups":[{"actionItems":[{"id":"a-5-n","actionTypeId":"TRANSFORM_MOVE","config":{"delay":2000,"easing":"inCubic","duration":800,"target":{"id":"637f8609bfc3a8725d4cf3ad|b36549d8-b780-7fb7-8674-0b37bf71500b"},"yValue":110,"xUnit":"PX","yUnit":"PX","zUnit":"PX"}}]},{"actionItems":[{"id":"a-5-n-2","actionTypeId":"TRANSFORM_MOVE","config":{"delay":0,"easing":"","duration":0,"target":{"id":"637f8609bfc3a8725d4cf3ad|b36549d8-b780-7fb7-8674-0b37bf71500b"},"yValue":-110,"xUnit":"PX","yUnit":"PX","zUnit":"PX"}}]},{"actionItems":[{"id":"a-5-n-3","actionTypeId":"TRANSFORM_MOVE","config":{"delay":0,"easing":"outCubic","duration":800,"target":{"id":"637f8609bfc3a8725d4cf3ad|b36549d8-b780-7fb7-8674-0b37bf71500b"},"yValue":0,"xUnit":"PX","yUnit":"PX","zUnit":"PX"}}]}],"useFirstGroupAsInitialState":false,"createdOn":1559301990277},"a-6":{"id":"a-6","title":"Mockup Hover","actionItemGroups":[{"actionItems":[{"id":"a-6-n","actionTypeId":"TRANSFORM_MOVE","config":{"delay":0,"easing":"","duration":500,"target":{"useEventTarget":"CHILDREN","selector":".mockup-arrow","selectorGuids":["a3ab0edb-8dd3-183e-3313-3e1df940ca25"]},"xValue":-35,"xUnit":"PX","yUnit":"PX","zUnit":"PX"}},{"id":"a-6-n-4","actionTypeId":"STYLE_OPACITY","config":{"delay":0,"easing":"","duration":500,"target":{"useEventTarget":"CHILDREN","selector":".mockup-hover-text","selectorGuids":["1132bc89-718a-1be8-a974-c5e448034e82"]},"value":0,"unit":""}},{"id":"a-6-n-3","actionTypeId":"TRANSFORM_MOVE","config":{"delay":0,"easing":"","duration":500,"target":{"useEventTarget":"CHILDREN","selector":".mockup-hover-text","selectorGuids":["1132bc89-718a-1be8-a974-c5e448034e82"]},"xValue":-9,"xUnit":"PX","yUnit":"PX","zUnit":"PX"}}]},{"actionItems":[{"id":"a-6-n-5","actionTypeId":"STYLE_OPACITY","config":{"delay":0,"easing":"outQuad","duration":100,"target":{"useEventTarget":"CHILDREN","selector":".mockup-hover-text","selectorGuids":["1132bc89-718a-1be8-a974-c5e448034e82"]},"value":1,"unit":""}},{"id":"a-6-n-6","actionTypeId":"TRANSFORM_MOVE","config":{"delay":0,"easing":"outQuad","duration":100,"target":{"useEventTarget":"CHILDREN","selector":".mockup-hover-text","selectorGuids":["1132bc89-718a-1be8-a974-c5e448034e82"]},"xValue":0,"xUnit":"PX","yUnit":"PX","zUnit":"PX"}},{"id":"a-6-n-7","actionTypeId":"TRANSFORM_MOVE","config":{"delay":0,"easing":"outQuad","duration":300,"target":{"useEventTarget":"CHILDREN","selector":".mockup-img","selectorGuids":["51cf83b5-b1be-0579-260d-d4ec2f1dda44"]},"xValue":8,"yValue":-8,"xUnit":"PX","yUnit":"PX","zUnit":"PX"}},{"id":"a-6-n-2","actionTypeId":"TRANSFORM_MOVE","config":{"delay":100,"easing":"outQuad","duration":200,"target":{"useEventTarget":"CHILDREN","selector":".mockup-arrow","selectorGuids":["a3ab0edb-8dd3-183e-3313-3e1df940ca25"]},"xValue":0,"xUnit":"PX","yUnit":"PX","zUnit":"PX"}}]}],"useFirstGroupAsInitialState":true,"createdOn":1559320190270},"a-7":{"id":"a-7","title":"Mockup Hover Out","actionItemGroups":[{"actionItems":[{"id":"a-7-n-4","actionTypeId":"STYLE_OPACITY","config":{"delay":0,"easing":"outQuad","duration":200,"target":{"useEventTarget":"CHILDREN","selector":".mockup-hover-text","selectorGuids":["1132bc89-718a-1be8-a974-c5e448034e82"]},"value":0,"unit":""}},{"id":"a-7-n-3","actionTypeId":"TRANSFORM_MOVE","config":{"delay":0,"easing":"outQuad","duration":200,"target":{"useEventTarget":"CHILDREN","selector":".mockup-hover-text","selectorGuids":["1132bc89-718a-1be8-a974-c5e448034e82"]},"xValue":-10,"xUnit":"PX","yUnit":"PX","zUnit":"PX"}},{"id":"a-7-n-2","actionTypeId":"TRANSFORM_MOVE","config":{"delay":0,"easing":"outQuad","duration":200,"target":{"useEventTarget":"CHILDREN","selector":".mockup-arrow","selectorGuids":["a3ab0edb-8dd3-183e-3313-3e1df940ca25"]},"xValue":-35,"xUnit":"PX","yUnit":"PX","zUnit":"PX"}},{"id":"a-7-n-5","actionTypeId":"TRANSFORM_MOVE","config":{"delay":0,"easing":"outQuad","duration":200,"target":{"useEventTarget":"CHILDREN","selector":".mockup-img","selectorGuids":["51cf83b5-b1be-0579-260d-d4ec2f1dda44"]},"xValue":0,"yValue":0,"xUnit":"PX","yUnit":"PX","zUnit":"PX"}}]}],"useFirstGroupAsInitialState":false,"createdOn":1559320190270},"a-8":{"id":"a-8","title":"Highlight (body)","actionItemGroups":[{"actionItems":[{"id":"a-8-n","actionTypeId":"TRANSFORM_SCALE","config":{"delay":0,"easing":"","duration":500,"target":{"useEventTarget":"CHILDREN","selector":".highlight","selectorGuids":["d3826c90-e0e4-53e4-838b-d77ffe11783f"]},"xValue":0,"locked":false}}]},{"actionItems":[{"id":"a-8-n-3","actionTypeId":"TRANSFORM_SCALE","config":{"delay":500,"easing":"outCubic","duration":600,"target":{"useEventTarget":"CHILDREN","selector":".highlight","selectorGuids":["d3826c90-e0e4-53e4-838b-d77ffe11783f"]},"xValue":1,"locked":false}}]}],"useFirstGroupAsInitialState":true,"createdOn":1559212816157},"a-11":{"id":"a-11","title":"Content Slide (Project Page)","actionItemGroups":[{"actionItems":[{"id":"a-11-n-13","actionTypeId":"TRANSFORM_MOVE","config":{"delay":0,"easing":"","duration":500,"target":{"id":"637f8609bfc3a83df44cf3ae|9768578e-f967-712e-9acc-5bd5bb5e7a7f"},"yValue":60,"xUnit":"PX","yUnit":"PX","zUnit":"PX"}},{"id":"a-11-n-14","actionTypeId":"STYLE_OPACITY","config":{"delay":0,"easing":"","duration":500,"target":{"id":"637f8609bfc3a83df44cf3ae|9768578e-f967-712e-9acc-5bd5bb5e7a7f"},"value":0,"unit":""}},{"id":"a-11-n-15","actionTypeId":"TRANSFORM_MOVE","config":{"delay":0,"easing":"","duration":500,"target":{"id":"637f8609bfc3a83df44cf3ae|50fc42ed-e88e-ebab-f6b0-bd5e8e331fbc"},"yValue":60,"xUnit":"PX","yUnit":"PX","zUnit":"PX"}},{"id":"a-11-n-16","actionTypeId":"STYLE_OPACITY","config":{"delay":0,"easing":"","duration":500,"target":{"id":"637f8609bfc3a83df44cf3ae|50fc42ed-e88e-ebab-f6b0-bd5e8e331fbc"},"value":0,"unit":""}}]},{"actionItems":[{"id":"a-11-n-7","actionTypeId":"TRANSFORM_MOVE","config":{"delay":0,"easing":"ease","duration":800,"target":{"id":"637f8609bfc3a83df44cf3ae|9768578e-f967-712e-9acc-5bd5bb5e7a7f"},"yValue":0,"xUnit":"PX","yUnit":"PX","zUnit":"PX"}},{"id":"a-11-n-8","actionTypeId":"STYLE_OPACITY","config":{"delay":0,"easing":"ease","duration":800,"target":{"id":"637f8609bfc3a83df44cf3ae|9768578e-f967-712e-9acc-5bd5bb5e7a7f"},"value":1,"unit":""}},{"id":"a-11-n-12","actionTypeId":"TRANSFORM_MOVE","config":{"delay":200,"easing":"ease","duration":800,"target":{"id":"637f8609bfc3a83df44cf3ae|50fc42ed-e88e-ebab-f6b0-bd5e8e331fbc"},"yValue":0,"xUnit":"PX","yUnit":"PX","zUnit":"PX"}},{"id":"a-11-n-11","actionTypeId":"STYLE_OPACITY","config":{"delay":200,"easing":"ease","duration":800,"target":{"id":"637f8609bfc3a83df44cf3ae|50fc42ed-e88e-ebab-f6b0-bd5e8e331fbc"},"value":1,"unit":""}}]}],"useFirstGroupAsInitialState":true,"createdOn":1559214715842},"a-12":{"id":"a-12","title":"Cards","continuousParameterGroups":[{"id":"a-12-p","type":"SCROLL_PROGRESS","parameterLabel":"Scroll","continuousActionGroups":[{"keyframe":40,"actionItems":[{"id":"a-12-n","actionTypeId":"TRANSFORM_SCALE","config":{"delay":0,"easing":"","duration":500,"target":{"useEventTarget":true,"id":"637f8609bfc3a8725d4cf3ad|6020dc6c-9d7b-4059-5b10-702e04706fbd"},"xValue":1,"yValue":1,"locked":true}}]},{"keyframe":100,"actionItems":[{"id":"a-12-n-2","actionTypeId":"TRANSFORM_SCALE","config":{"delay":0,"easing":"","duration":500,"target":{"useEventTarget":true,"id":"637f8609bfc3a8725d4cf3ad|6020dc6c-9d7b-4059-5b10-702e04706fbd"},"xValue":0.8,"yValue":0.8,"locked":true}}]}]}],"createdOn":1603881517811},"a-13":{"id":"a-13","title":"arrow move right","actionItemGroups":[{"actionItems":[{"id":"a-13-n","actionTypeId":"TRANSFORM_MOVE","config":{"delay":0,"easing":"ease","duration":200,"target":{"useEventTarget":"CHILDREN","selector":".image-7","selectorGuids":["b4e61fe0-9738-a5cb-f556-2a4a1635d63b"]},"xValue":8,"xUnit":"px","yUnit":"PX","zUnit":"PX"}}]}],"useFirstGroupAsInitialState":false,"createdOn":1677589476727},"a-14":{"id":"a-14","title":"arrow move back","actionItemGroups":[{"actionItems":[{"id":"a-14-n","actionTypeId":"TRANSFORM_MOVE","config":{"delay":0,"easing":"ease","duration":200,"target":{"useEventTarget":"CHILDREN","selector":".image-7","selectorGuids":["b4e61fe0-9738-a5cb-f556-2a4a1635d63b"]},"xValue":0,"xUnit":"px","yUnit":"PX","zUnit":"PX"}}]}],"useFirstGroupAsInitialState":false,"createdOn":1677589703208},"a-16":{"id":"a-16","title":"Thumb Img Mouse IN","actionItemGroups":[{"actionItems":[{"id":"a-16-n","actionTypeId":"TRANSFORM_SCALE","config":{"delay":0,"easing":"ease","duration":350,"target":{"useEventTarget":"CHILDREN","selector":".c-img-thumbnail","selectorGuids":["b159e67d-4b16-ccf4-b127-32a39d52111a"]},"xValue":0.95,"yValue":0.95,"locked":true}},{"id":"a-16-n-2","actionTypeId":"TRANSFORM_SCALE","config":{"delay":0,"easing":"","duration":500,"target":{"useEventTarget":"CHILDREN","selector":".img-thumbnail-bg","selectorGuids":["b159e67d-4b16-ccf4-b127-32a39d52112b"]},"xValue":1,"yValue":1,"locked":true}},{"id":"a-16-n-3","actionTypeId":"STYLE_OPACITY","config":{"delay":0,"easing":"ease","duration":350,"target":{"useEventTarget":"CHILDREN","selector":".c-img-thumb-overlay","selectorGuids":["b159e67d-4b16-ccf4-b127-32a39d521128"]},"value":0,"unit":""}},{"id":"a-16-n-4","actionTypeId":"TRANSFORM_MOVE","config":{"delay":0,"easing":"ease","duration":350,"target":{"useEventTarget":"CHILDREN","selector":".img-thumb-overlay-text","selectorGuids":["b159e67d-4b16-ccf4-b127-32a39d521127"]},"yValue":0,"xUnit":"%","yUnit":"%","zUnit":"PX"}},{"id":"a-16-n-5","actionTypeId":"TRANSFORM_MOVE","config":{"delay":0,"easing":"","duration":500,"target":{"useEventTarget":"CHILDREN","selector":".img-thumb-overlay-text","selectorGuids":["b159e67d-4b16-ccf4-b127-32a39d521127"]},"yValue":100,"xUnit":"PX","yUnit":"%","zUnit":"PX"}},{"id":"a-16-n-6","actionTypeId":"STYLE_OPACITY","config":{"delay":0,"easing":"","duration":500,"target":{"useEventTarget":"CHILDREN","selector":".img-thumb-overlay-text","selectorGuids":["b159e67d-4b16-ccf4-b127-32a39d521127"]},"value":0,"unit":""}},{"id":"a-16-n-7","actionTypeId":"TRANSFORM_SCALE","config":{"delay":0,"easing":"ease","duration":350,"target":{"useEventTarget":"CHILDREN","selector":".img-thumb-overlay-icon","selectorGuids":["b159e67d-4b16-ccf4-b127-32a39d521126"]},"xValue":0,"yValue":0,"locked":true}},{"id":"a-16-n-8","actionTypeId":"STYLE_OPACITY","config":{"delay":0,"easing":"ease","duration":350,"target":{"useEventTarget":"CHILDREN","selector":".img-thumb-overlay-icon","selectorGuids":["b159e67d-4b16-ccf4-b127-32a39d521126"]},"value":0,"unit":""}}]},{"actionItems":[{"id":"a-16-n-9","actionTypeId":"TRANSFORM_SCALE","config":{"delay":0,"easing":"ease","duration":350,"target":{"useEventTarget":"CHILDREN","selector":".c-img-thumbnail","selectorGuids":["b159e67d-4b16-ccf4-b127-32a39d52111a"]},"xValue":1,"yValue":1,"locked":true}},{"id":"a-16-n-10","actionTypeId":"TRANSFORM_SCALE","config":{"delay":0,"easing":"ease","duration":350,"target":{"useEventTarget":"CHILDREN","selector":".img-thumbnail-bg","selectorGuids":["b159e67d-4b16-ccf4-b127-32a39d52112b"]},"xValue":0.95,"yValue":0.95,"locked":true}},{"id":"a-16-n-11","actionTypeId":"STYLE_OPACITY","config":{"delay":0,"easing":"ease","duration":350,"target":{"useEventTarget":"CHILDREN","selector":".c-img-thumb-overlay","selectorGuids":["b159e67d-4b16-ccf4-b127-32a39d521128"]},"value":1,"unit":""}},{"id":"a-16-n-12","actionTypeId":"STYLE_OPACITY","config":{"delay":200,"easing":"ease","duration":350,"target":{"useEventTarget":"CHILDREN","selector":".img-thumb-overlay-icon","selectorGuids":["b159e67d-4b16-ccf4-b127-32a39d521126"]},"value":1,"unit":""}},{"id":"a-16-n-13","actionTypeId":"TRANSFORM_SCALE","config":{"delay":200,"easing":"ease","duration":350,"target":{"useEventTarget":"CHILDREN","selector":".img-thumb-overlay-icon","selectorGuids":["b159e67d-4b16-ccf4-b127-32a39d521126"]},"xValue":1,"yValue":1,"locked":true}},{"id":"a-16-n-14","actionTypeId":"TRANSFORM_MOVE","config":{"delay":350,"easing":"ease","duration":350,"target":{"useEventTarget":"CHILDREN","selector":".img-thumb-overlay-text","selectorGuids":["b159e67d-4b16-ccf4-b127-32a39d521127"]},"yValue":0,"xUnit":"%","yUnit":"%","zUnit":"PX"}},{"id":"a-16-n-15","actionTypeId":"STYLE_OPACITY","config":{"delay":350,"easing":"ease","duration":350,"target":{"useEventTarget":"CHILDREN","selector":".img-thumb-overlay-text","selectorGuids":["b159e67d-4b16-ccf4-b127-32a39d521127"]},"value":1,"unit":""}}]}],"useFirstGroupAsInitialState":true,"createdOn":1603177528364},"a-17":{"id":"a-17","title":"Thumb Img Mouse OUT","actionItemGroups":[{"actionItems":[{"id":"a-17-n","actionTypeId":"TRANSFORM_SCALE","config":{"delay":0,"easing":"ease","duration":350,"target":{"useEventTarget":"CHILDREN","selector":".c-img-thumbnail","selectorGuids":["b159e67d-4b16-ccf4-b127-32a39d52111a"]},"xValue":0.95,"yValue":0.95,"locked":true}},{"id":"a-17-n-2","actionTypeId":"TRANSFORM_SCALE","config":{"delay":0,"easing":"ease","duration":350,"target":{"useEventTarget":"CHILDREN","selector":".img-thumbnail-bg","selectorGuids":["b159e67d-4b16-ccf4-b127-32a39d52112b"]},"xValue":1,"yValue":1,"locked":true}},{"id":"a-17-n-3","actionTypeId":"STYLE_OPACITY","config":{"delay":0,"easing":"ease","duration":350,"target":{"useEventTarget":"CHILDREN","selector":".c-img-thumb-overlay","selectorGuids":["b159e67d-4b16-ccf4-b127-32a39d521128"]},"value":0,"unit":""}},{"id":"a-17-n-4","actionTypeId":"STYLE_OPACITY","config":{"delay":0,"easing":"ease","duration":350,"target":{"useEventTarget":"CHILDREN","selector":".img-thumb-overlay-icon","selectorGuids":["b159e67d-4b16-ccf4-b127-32a39d521126"]},"value":0,"unit":""}},{"id":"a-17-n-5","actionTypeId":"TRANSFORM_SCALE","config":{"delay":0,"easing":"ease","duration":350,"target":{"useEventTarget":"CHILDREN","selector":".img-thumb-overlay-icon","selectorGuids":["b159e67d-4b16-ccf4-b127-32a39d521126"]},"xValue":0,"yValue":0,"locked":true}},{"id":"a-17-n-6","actionTypeId":"TRANSFORM_MOVE","config":{"delay":0,"easing":"ease","duration":350,"target":{"useEventTarget":"CHILDREN","selector":".img-thumb-overlay-text","selectorGuids":["b159e67d-4b16-ccf4-b127-32a39d521127"]},"yValue":100,"xUnit":"%","yUnit":"%","zUnit":"PX"}},{"id":"a-17-n-7","actionTypeId":"STYLE_OPACITY","config":{"delay":0,"easing":"ease","duration":350,"target":{"useEventTarget":"CHILDREN","selector":".img-thumb-overlay-text","selectorGuids":["b159e67d-4b16-ccf4-b127-32a39d521127"]},"value":0,"unit":""}}]}],"useFirstGroupAsInitialState":false,"createdOn":1603177528364},"a-18":{"id":"a-18","title":"Show Zoom IN Img","actionItemGroups":[{"actionItems":[{"id":"a-18-n","actionTypeId":"GENERAL_DISPLAY","config":{"delay":0,"easing":"","duration":0,"target":{"useEventTarget":"SIBLINGS","selector":".c-zoom-in-img","selectorGuids":["b159e67d-4b16-ccf4-b127-32a39d52112a"]},"value":"none"}},{"id":"a-18-n-2","actionTypeId":"STYLE_OPACITY","config":{"delay":0,"easing":"ease","duration":500,"target":{"useEventTarget":"SIBLINGS","selector":".c-zoom-in-img","selectorGuids":["b159e67d-4b16-ccf4-b127-32a39d52112a"]},"value":0,"unit":""}},{"id":"a-18-n-3","actionTypeId":"TRANSFORM_SCALE","config":{"delay":0,"easing":"ease","duration":350,"target":{"selector":"._w-zoom-in-img","selectorGuids":["b159e67d-4b16-ccf4-b127-32a39d521123"]},"xValue":0,"yValue":0,"locked":true}},{"id":"a-18-n-4","actionTypeId":"STYLE_OPACITY","config":{"delay":0,"easing":"ease","duration":350,"target":{"selector":"._w-zoom-in-img","selectorGuids":["b159e67d-4b16-ccf4-b127-32a39d521123"]},"value":0,"unit":""}},{"id":"a-18-n-5","actionTypeId":"TRANSFORM_MOVE","config":{"delay":0,"easing":"ease","duration":350,"target":{"selector":".zoom-out-text","selectorGuids":["b159e67d-4b16-ccf4-b127-32a39d521125"]},"yValue":100,"xUnit":"PX","yUnit":"%","zUnit":"PX"}},{"id":"a-18-n-6","actionTypeId":"STYLE_OPACITY","config":{"delay":0,"easing":"ease","duration":350,"target":{"selector":".zoom-out-text","selectorGuids":["b159e67d-4b16-ccf4-b127-32a39d521125"]},"value":0,"unit":""}}]},{"actionItems":[{"id":"a-18-n-7","actionTypeId":"GENERAL_DISPLAY","config":{"delay":0,"easing":"","duration":0,"target":{"useEventTarget":"SIBLINGS","selector":".c-zoom-in-img","selectorGuids":["b159e67d-4b16-ccf4-b127-32a39d52112a"]},"value":"block"}}]},{"actionItems":[{"id":"a-18-n-8","actionTypeId":"STYLE_OPACITY","config":{"delay":0,"easing":"ease","duration":350,"target":{"useEventTarget":"SIBLINGS","selector":".c-zoom-in-img","selectorGuids":["b159e67d-4b16-ccf4-b127-32a39d52112a"]},"value":1,"unit":""}}]},{"actionItems":[{"id":"a-18-n-9","actionTypeId":"TRANSFORM_SCALE","config":{"delay":0,"easing":"ease","duration":350,"target":{"selector":"._w-zoom-in-img","selectorGuids":["b159e67d-4b16-ccf4-b127-32a39d521123"]},"xValue":1,"yValue":1,"locked":true}},{"id":"a-18-n-10","actionTypeId":"STYLE_OPACITY","config":{"delay":0,"easing":"ease","duration":350,"target":{"selector":"._w-zoom-in-img","selectorGuids":["b159e67d-4b16-ccf4-b127-32a39d521123"]},"value":1,"unit":""}}]},{"actionItems":[{"id":"a-18-n-11","actionTypeId":"TRANSFORM_MOVE","config":{"delay":0,"easing":"ease","duration":350,"target":{"selector":".zoom-out-text","selectorGuids":["b159e67d-4b16-ccf4-b127-32a39d521125"]},"yValue":0,"xUnit":"PX","yUnit":"%","zUnit":"PX"}},{"id":"a-18-n-12","actionTypeId":"STYLE_OPACITY","config":{"delay":0,"easing":"ease","duration":350,"target":{"selector":".zoom-out-text","selectorGuids":["b159e67d-4b16-ccf4-b127-32a39d521125"]},"value":1,"unit":""}}]}],"useFirstGroupAsInitialState":true,"createdOn":1603180336911},"a-19":{"id":"a-19","title":"Hide Zoom IN Img","actionItemGroups":[{"actionItems":[{"id":"a-19-n","actionTypeId":"TRANSFORM_MOVE","config":{"delay":0,"easing":"ease","duration":350,"target":{"selector":".zoom-out-text","selectorGuids":["b159e67d-4b16-ccf4-b127-32a39d521125"]},"yValue":100,"xUnit":"PX","yUnit":"%","zUnit":"PX"}},{"id":"a-19-n-2","actionTypeId":"STYLE_OPACITY","config":{"delay":0,"easing":"ease","duration":350,"target":{"selector":".zoom-out-text","selectorGuids":["b159e67d-4b16-ccf4-b127-32a39d521125"]},"value":0,"unit":""}},{"id":"a-19-n-3","actionTypeId":"TRANSFORM_SCALE","config":{"delay":0,"easing":"ease","duration":350,"target":{"selector":"._w-zoom-in-img","selectorGuids":["b159e67d-4b16-ccf4-b127-32a39d521123"]},"xValue":0,"yValue":0,"locked":true}},{"id":"a-19-n-4","actionTypeId":"STYLE_OPACITY","config":{"delay":0,"easing":"ease","duration":350,"target":{"selector":"._w-zoom-in-img","selectorGuids":["b159e67d-4b16-ccf4-b127-32a39d521123"]},"value":0,"unit":""}}]},{"actionItems":[{"id":"a-19-n-5","actionTypeId":"STYLE_OPACITY","config":{"delay":0,"easing":"ease","duration":350,"target":{"useEventTarget":"PARENT","selector":".c-zoom-in-img","selectorGuids":["b159e67d-4b16-ccf4-b127-32a39d52112a"]},"value":0,"unit":""}}]},{"actionItems":[{"id":"a-19-n-6","actionTypeId":"GENERAL_DISPLAY","config":{"delay":0,"easing":"","duration":0,"target":{"useEventTarget":"PARENT","selector":".c-zoom-in-img","selectorGuids":["b159e67d-4b16-ccf4-b127-32a39d52112a"]},"value":"none"}}]}],"useFirstGroupAsInitialState":false,"createdOn":1603180336911},"a-20":{"id":"a-20","title":"Zoom IN HD Img","continuousParameterGroups":[{"id":"a-20-p","type":"MOUSE_X","parameterLabel":"Mouse X","continuousActionGroups":[{"keyframe":0,"actionItems":[{"id":"a-20-n","actionTypeId":"TRANSFORM_MOVE","config":{"delay":0,"easing":"","duration":500,"target":{"useEventTarget":"CHILDREN","selector":".c-hd-img","selectorGuids":["b159e67d-4b16-ccf4-b127-32a39d521129"]},"xValue":25,"xUnit":"%","yUnit":"PX","zUnit":"PX"}}]},{"keyframe":100,"actionItems":[{"id":"a-20-n-2","actionTypeId":"TRANSFORM_MOVE","config":{"delay":0,"easing":"","duration":500,"target":{"useEventTarget":"CHILDREN","selector":".c-hd-img","selectorGuids":["b159e67d-4b16-ccf4-b127-32a39d521129"]},"xValue":-25,"xUnit":"%","yUnit":"PX","zUnit":"PX"}}]}]},{"id":"a-20-p-2","type":"MOUSE_Y","parameterLabel":"Mouse Y","continuousActionGroups":[{"keyframe":0,"actionItems":[{"id":"a-20-n-3","actionTypeId":"TRANSFORM_MOVE","config":{"delay":0,"easing":"","duration":500,"target":{"useEventTarget":"CHILDREN","selector":".c-hd-img","selectorGuids":["b159e67d-4b16-ccf4-b127-32a39d521129"]},"yValue":25,"xUnit":"%","yUnit":"%","zUnit":"PX"}}]},{"keyframe":100,"actionItems":[{"id":"a-20-n-4","actionTypeId":"TRANSFORM_MOVE","config":{"delay":0,"easing":"","duration":500,"target":{"useEventTarget":"CHILDREN","selector":".c-hd-img","selectorGuids":["b159e67d-4b16-ccf4-b127-32a39d521129"]},"yValue":-25,"xUnit":"%","yUnit":"%","zUnit":"PX"}}]}]}],"createdOn":1603179440428},"a-21":{"id":"a-21","title":"Thumb Img Mouse IN 2","actionItemGroups":[{"actionItems":[{"id":"a-21-n","actionTypeId":"TRANSFORM_SCALE","config":{"delay":0,"easing":"ease","duration":350,"target":{"useEventTarget":"CHILDREN","selector":".c-img-thumbnail","selectorGuids":["b159e67d-4b16-ccf4-b127-32a39d52111a"]},"xValue":0.95,"yValue":0.95,"locked":true}},{"id":"a-21-n-2","actionTypeId":"TRANSFORM_SCALE","config":{"delay":0,"easing":"","duration":500,"target":{"useEventTarget":"CHILDREN","selector":".img-thumbnail-bg","selectorGuids":["b159e67d-4b16-ccf4-b127-32a39d52112b"]},"xValue":1,"yValue":1,"locked":true}},{"id":"a-21-n-3","actionTypeId":"STYLE_OPACITY","config":{"delay":0,"easing":"ease","duration":350,"target":{"useEventTarget":"CHILDREN","selector":".c-img-thumb-overlay","selectorGuids":["b159e67d-4b16-ccf4-b127-32a39d521128"]},"value":0,"unit":""}},{"id":"a-21-n-4","actionTypeId":"TRANSFORM_MOVE","config":{"delay":0,"easing":"ease","duration":350,"target":{"useEventTarget":"CHILDREN","selector":".img-thumb-overlay-text-2","selectorGuids":["5d7cc156-757b-2ffc-5db4-7b62a746ecd1"]},"yValue":0,"xUnit":"%","yUnit":"%","zUnit":"PX"}},{"id":"a-21-n-5","actionTypeId":"TRANSFORM_MOVE","config":{"delay":0,"easing":"","duration":500,"target":{"useEventTarget":"CHILDREN","selector":".img-thumb-overlay-text-2","selectorGuids":["5d7cc156-757b-2ffc-5db4-7b62a746ecd1"]},"yValue":100,"xUnit":"PX","yUnit":"%","zUnit":"PX"}},{"id":"a-21-n-6","actionTypeId":"STYLE_OPACITY","config":{"delay":0,"easing":"","duration":500,"target":{"useEventTarget":"CHILDREN","selector":".img-thumb-overlay-text-2","selectorGuids":["5d7cc156-757b-2ffc-5db4-7b62a746ecd1"]},"value":0,"unit":""}},{"id":"a-21-n-7","actionTypeId":"TRANSFORM_SCALE","config":{"delay":0,"easing":"ease","duration":350,"target":{"useEventTarget":"CHILDREN","selector":".img-thumb-overlay-icon","selectorGuids":["b159e67d-4b16-ccf4-b127-32a39d521126"]},"xValue":0,"yValue":0,"locked":true}},{"id":"a-21-n-8","actionTypeId":"STYLE_OPACITY","config":{"delay":0,"easing":"ease","duration":350,"target":{"useEventTarget":"CHILDREN","selector":".img-thumb-overlay-icon","selectorGuids":["b159e67d-4b16-ccf4-b127-32a39d521126"]},"value":0,"unit":""}}]},{"actionItems":[{"id":"a-21-n-9","actionTypeId":"TRANSFORM_SCALE","config":{"delay":0,"easing":"ease","duration":350,"target":{"useEventTarget":"CHILDREN","selector":".c-img-thumbnail","selectorGuids":["b159e67d-4b16-ccf4-b127-32a39d52111a"]},"xValue":1,"yValue":1,"locked":true}},{"id":"a-21-n-10","actionTypeId":"TRANSFORM_SCALE","config":{"delay":0,"easing":"ease","duration":350,"target":{"useEventTarget":"CHILDREN","selector":".img-thumbnail-bg","selectorGuids":["b159e67d-4b16-ccf4-b127-32a39d52112b"]},"xValue":0.95,"yValue":0.95,"locked":true}},{"id":"a-21-n-11","actionTypeId":"STYLE_OPACITY","config":{"delay":0,"easing":"ease","duration":350,"target":{"useEventTarget":"CHILDREN","selector":".c-img-thumb-overlay","selectorGuids":["b159e67d-4b16-ccf4-b127-32a39d521128"]},"value":1,"unit":""}},{"id":"a-21-n-12","actionTypeId":"STYLE_OPACITY","config":{"delay":200,"easing":"ease","duration":350,"target":{"useEventTarget":"CHILDREN","selector":".img-thumb-overlay-icon","selectorGuids":["b159e67d-4b16-ccf4-b127-32a39d521126"]},"value":1,"unit":""}},{"id":"a-21-n-13","actionTypeId":"TRANSFORM_SCALE","config":{"delay":200,"easing":"ease","duration":350,"target":{"useEventTarget":"CHILDREN","selector":".img-thumb-overlay-icon","selectorGuids":["b159e67d-4b16-ccf4-b127-32a39d521126"]},"xValue":1,"yValue":1,"locked":true}},{"id":"a-21-n-14","actionTypeId":"TRANSFORM_MOVE","config":{"delay":350,"easing":"ease","duration":350,"target":{"useEventTarget":"CHILDREN","selector":".img-thumb-overlay-text-2","selectorGuids":["5d7cc156-757b-2ffc-5db4-7b62a746ecd1"]},"yValue":0,"xUnit":"%","yUnit":"%","zUnit":"PX"}},{"id":"a-21-n-15","actionTypeId":"STYLE_OPACITY","config":{"delay":350,"easing":"ease","duration":350,"target":{"useEventTarget":"CHILDREN","selector":".img-thumb-overlay-text-2","selectorGuids":["5d7cc156-757b-2ffc-5db4-7b62a746ecd1"]},"value":1,"unit":""}}]}],"useFirstGroupAsInitialState":true,"createdOn":1603177528364},"a-22":{"id":"a-22","title":"Thumb Img Mouse OUT 2","actionItemGroups":[{"actionItems":[{"id":"a-22-n","actionTypeId":"TRANSFORM_SCALE","config":{"delay":0,"easing":"ease","duration":350,"target":{"useEventTarget":"CHILDREN","selector":".c-img-thumbnail","selectorGuids":["b159e67d-4b16-ccf4-b127-32a39d52111a"]},"xValue":0.95,"yValue":0.95,"locked":true}},{"id":"a-22-n-2","actionTypeId":"TRANSFORM_SCALE","config":{"delay":0,"easing":"ease","duration":350,"target":{"useEventTarget":"CHILDREN","selector":".img-thumbnail-bg","selectorGuids":["b159e67d-4b16-ccf4-b127-32a39d52112b"]},"xValue":1,"yValue":1,"locked":true}},{"id":"a-22-n-3","actionTypeId":"STYLE_OPACITY","config":{"delay":0,"easing":"ease","duration":350,"target":{"useEventTarget":"CHILDREN","selector":".c-img-thumb-overlay","selectorGuids":["b159e67d-4b16-ccf4-b127-32a39d521128"]},"value":0,"unit":""}},{"id":"a-22-n-4","actionTypeId":"STYLE_OPACITY","config":{"delay":0,"easing":"ease","duration":350,"target":{"useEventTarget":"CHILDREN","selector":".img-thumb-overlay-icon","selectorGuids":["b159e67d-4b16-ccf4-b127-32a39d521126"]},"value":0,"unit":""}},{"id":"a-22-n-5","actionTypeId":"TRANSFORM_SCALE","config":{"delay":0,"easing":"ease","duration":350,"target":{"useEventTarget":"CHILDREN","selector":".img-thumb-overlay-icon","selectorGuids":["b159e67d-4b16-ccf4-b127-32a39d521126"]},"xValue":0,"yValue":0,"locked":true}},{"id":"a-22-n-6","actionTypeId":"TRANSFORM_MOVE","config":{"delay":0,"easing":"ease","duration":350,"target":{"useEventTarget":"CHILDREN","selector":".img-thumb-overlay-text-2","selectorGuids":["5d7cc156-757b-2ffc-5db4-7b62a746ecd1"]},"yValue":100,"xUnit":"%","yUnit":"%","zUnit":"PX"}},{"id":"a-22-n-7","actionTypeId":"STYLE_OPACITY","config":{"delay":0,"easing":"ease","duration":350,"target":{"useEventTarget":"CHILDREN","selector":".img-thumb-overlay-text-2","selectorGuids":["5d7cc156-757b-2ffc-5db4-7b62a746ecd1"]},"value":0,"unit":""}}]}],"useFirstGroupAsInitialState":false,"createdOn":1603177528364},"slideInBottom":{"id":"slideInBottom","useFirstGroupAsInitialState":true,"actionItemGroups":[{"actionItems":[{"actionTypeId":"STYLE_OPACITY","config":{"delay":0,"duration":0,"target":{"id":"N/A","appliesTo":"TRIGGER_ELEMENT","useEventTarget":true},"value":0}}]},{"actionItems":[{"actionTypeId":"TRANSFORM_MOVE","config":{"delay":0,"duration":0,"target":{"id":"N/A","appliesTo":"TRIGGER_ELEMENT","useEventTarget":true},"xValue":0,"yValue":100,"xUnit":"PX","yUnit":"PX","zUnit":"PX"}}]},{"actionItems":[{"actionTypeId":"TRANSFORM_MOVE","config":{"delay":0,"easing":"outQuart","duration":1000,"target":{"id":"N/A","appliesTo":"TRIGGER_ELEMENT","useEventTarget":true},"xValue":0,"yValue":0,"xUnit":"PX","yUnit":"PX","zUnit":"PX"}},{"actionTypeId":"STYLE_OPACITY","config":{"delay":0,"easing":"outQuart","duration":1000,"target":{"id":"N/A","appliesTo":"TRIGGER_ELEMENT","useEventTarget":true},"value":1}}]}]}},"site":{"mediaQueries":[{"key":"main","min":992,"max":10000},{"key":"medium","min":768,"max":991},{"key":"small","min":480,"max":767},{"key":"tiny","min":0,"max":479}]}}
+{"events":{"e":{"id":"e","name":"","animationType":"custom","eventTypeId":"MOUSE_OVER","action":{"id":"","actionTypeId":"GENERAL_START_ACTION","config":{"delay":0,"easing":"","duration":0,"actionListId":"a","affectedElements":{},"playInReverse":false,"autoStopEventId":"e-2"}},"mediaQueries":["main","medium","small","tiny"],"target":{"id":"64611fffa962170a270ce7f7|a4785d04-0e05-8067-457b-d9ff66dbdc0e","appliesTo":"ELEMENT","styleBlockIds":[]},"targets":[{"id":"64611fffa962170a270ce7f7|a4785d04-0e05-8067-457b-d9ff66dbdc0e","appliesTo":"ELEMENT","styleBlockIds":[]}],"config":{"loop":false,"playInReverse":false,"scrollOffsetValue":null,"scrollOffsetUnit":null,"delay":null,"direction":null,"effectIn":null},"createdOn":1559210462430},"e-2":{"id":"e-2","name":"","animationType":"custom","eventTypeId":"MOUSE_OUT","action":{"id":"","actionTypeId":"GENERAL_START_ACTION","config":{"delay":0,"easing":"","duration":0,"actionListId":"a-2","affectedElements":{},"playInReverse":false,"autoStopEventId":"e"}},"mediaQueries":["main","medium","small","tiny"],"target":{"id":"64611fffa962170a270ce7f7|a4785d04-0e05-8067-457b-d9ff66dbdc0e","appliesTo":"ELEMENT","styleBlockIds":[]},"targets":[{"id":"64611fffa962170a270ce7f7|a4785d04-0e05-8067-457b-d9ff66dbdc0e","appliesTo":"ELEMENT","styleBlockIds":[]}],"config":{"loop":false,"playInReverse":false,"scrollOffsetValue":null,"scrollOffsetUnit":null,"delay":null,"direction":null,"effectIn":null},"createdOn":1559210462432},"e-4":{"id":"e-4","name":"","animationType":"custom","eventTypeId":"PAGE_FINISH","action":{"id":"","actionTypeId":"GENERAL_START_ACTION","config":{"delay":0,"easing":"","duration":0,"actionListId":"a-4","affectedElements":{},"playInReverse":false,"autoStopEventId":"e-3"}},"mediaQueries":["main","medium","small","tiny"],"target":{"id":"64611fffa962170a270ce7f7","appliesTo":"PAGE","styleBlockIds":[]},"targets":[{"id":"64611fffa962170a270ce7f7","appliesTo":"PAGE","styleBlockIds":[]}],"config":{"loop":false,"playInReverse":false,"scrollOffsetValue":null,"scrollOffsetUnit":null,"delay":null,"direction":null,"effectIn":null},"createdOn":1559212802388},"e-5":{"id":"e-5","name":"","animationType":"custom","eventTypeId":"PAGE_START","action":{"id":"","actionTypeId":"GENERAL_START_ACTION","config":{"delay":0,"easing":"","duration":0,"actionListId":"a-4","affectedElements":{},"playInReverse":false,"autoStopEventId":"e-6"}},"mediaQueries":["main","medium","small","tiny"],"target":{"id":"64611fffa962170a270ce7f7","appliesTo":"PAGE","styleBlockIds":[]},"targets":[{"id":"64611fffa962170a270ce7f7","appliesTo":"PAGE","styleBlockIds":[]}],"config":{"loop":false,"playInReverse":false,"scrollOffsetValue":null,"scrollOffsetUnit":null,"delay":null,"direction":null,"effectIn":null},"createdOn":1559214705022},"e-8":{"id":"e-8","name":"","animationType":"custom","eventTypeId":"PAGE_FINISH","action":{"id":"","actionTypeId":"GENERAL_START_ACTION","config":{"delay":0,"easing":"","duration":0,"actionListId":"a-5","affectedElements":{},"playInReverse":false,"autoStopEventId":"e-7"}},"mediaQueries":["main","medium"],"target":{"id":"64611fffa962170a270ce7f7","appliesTo":"PAGE","styleBlockIds":[]},"targets":[{"id":"64611fffa962170a270ce7f7","appliesTo":"PAGE","styleBlockIds":[]}],"config":{"loop":true,"playInReverse":false,"scrollOffsetValue":null,"scrollOffsetUnit":null,"delay":null,"direction":null,"effectIn":null},"createdOn":1559301984756},"e-13":{"id":"e-13","name":"","animationType":"custom","eventTypeId":"MOUSE_OVER","action":{"id":"","actionTypeId":"GENERAL_START_ACTION","config":{"delay":0,"easing":"","duration":0,"actionListId":"a","affectedElements":{},"playInReverse":false,"autoStopEventId":"e-14"}},"mediaQueries":["main","medium","small","tiny"],"target":{"id":"23f4a6b9-d84d-4ca4-5e68-7e3d2a5de906","appliesTo":"ELEMENT","styleBlockIds":[]},"targets":[{"id":"23f4a6b9-d84d-4ca4-5e68-7e3d2a5de906","appliesTo":"ELEMENT","styleBlockIds":[]}],"config":{"loop":false,"playInReverse":false,"scrollOffsetValue":null,"scrollOffsetUnit":null,"delay":null,"direction":null,"effectIn":null},"createdOn":1559321618704},"e-14":{"id":"e-14","name":"","animationType":"custom","eventTypeId":"MOUSE_OUT","action":{"id":"","actionTypeId":"GENERAL_START_ACTION","config":{"delay":0,"easing":"","duration":0,"actionListId":"a-2","affectedElements":{},"playInReverse":false,"autoStopEventId":"e-13"}},"mediaQueries":["main","medium","small","tiny"],"target":{"id":"23f4a6b9-d84d-4ca4-5e68-7e3d2a5de906","appliesTo":"ELEMENT","styleBlockIds":[]},"targets":[{"id":"23f4a6b9-d84d-4ca4-5e68-7e3d2a5de906","appliesTo":"ELEMENT","styleBlockIds":[]}],"config":{"loop":false,"playInReverse":false,"scrollOffsetValue":null,"scrollOffsetUnit":null,"delay":null,"direction":null,"effectIn":null},"createdOn":1559321618704},"e-15":{"id":"e-15","name":"","animationType":"custom","eventTypeId":"MOUSE_OVER","action":{"id":"","actionTypeId":"GENERAL_START_ACTION","config":{"delay":0,"easing":"","duration":0,"actionListId":"a-6","affectedElements":{},"playInReverse":false,"autoStopEventId":"e-16"}},"mediaQueries":["main"],"target":{"id":"23f4a6b9-d84d-4ca4-5e68-7e3d2a5de90a","appliesTo":"ELEMENT","styleBlockIds":[]},"targets":[{"id":"23f4a6b9-d84d-4ca4-5e68-7e3d2a5de90a","appliesTo":"ELEMENT","styleBlockIds":[]}],"config":{"loop":false,"playInReverse":false,"scrollOffsetValue":null,"scrollOffsetUnit":null,"delay":null,"direction":null,"effectIn":null},"createdOn":1559321618704},"e-16":{"id":"e-16","name":"","animationType":"custom","eventTypeId":"MOUSE_OUT","action":{"id":"","actionTypeId":"GENERAL_START_ACTION","config":{"delay":0,"easing":"","duration":0,"actionListId":"a-7","affectedElements":{},"playInReverse":false,"autoStopEventId":"e-15"}},"mediaQueries":["main"],"target":{"id":"23f4a6b9-d84d-4ca4-5e68-7e3d2a5de90a","appliesTo":"ELEMENT","styleBlockIds":[]},"targets":[{"id":"23f4a6b9-d84d-4ca4-5e68-7e3d2a5de90a","appliesTo":"ELEMENT","styleBlockIds":[]}],"config":{"loop":false,"playInReverse":false,"scrollOffsetValue":null,"scrollOffsetUnit":null,"delay":null,"direction":null,"effectIn":null},"createdOn":1559321618704},"e-19":{"id":"e-19","name":"","animationType":"custom","eventTypeId":"SCROLL_INTO_VIEW","action":{"id":"","actionTypeId":"GENERAL_START_ACTION","config":{"delay":0,"easing":"","duration":0,"actionListId":"a-8","affectedElements":{},"playInReverse":false,"autoStopEventId":"e-20"}},"mediaQueries":["main","medium","small","tiny"],"target":{"id":"f4f04428-8e83-23ee-dfff-02c24ace3d00","appliesTo":"ELEMENT","styleBlockIds":[]},"targets":[{"id":"f4f04428-8e83-23ee-dfff-02c24ace3d00","appliesTo":"ELEMENT","styleBlockIds":[]}],"config":{"loop":false,"playInReverse":false,"scrollOffsetValue":20,"scrollOffsetUnit":"%","delay":null,"direction":null,"effectIn":null},"createdOn":1559325123417},"e-23":{"id":"e-23","name":"","animationType":"preset","eventTypeId":"SCROLL_INTO_VIEW","action":{"id":"","actionTypeId":"SLIDE_EFFECT","instant":false,"config":{"actionListId":"slideInBottom","autoStopEventId":"e-24"}},"mediaQueries":["main","medium","small","tiny"],"target":{"id":"f4f04428-8e83-23ee-dfff-02c24ace3cfd","appliesTo":"ELEMENT","styleBlockIds":[]},"targets":[{"id":"f4f04428-8e83-23ee-dfff-02c24ace3cfd","appliesTo":"ELEMENT","styleBlockIds":[]}],"config":{"loop":false,"playInReverse":false,"scrollOffsetValue":10,"scrollOffsetUnit":"%","delay":0,"direction":"BOTTOM","effectIn":true},"createdOn":1559325355481},"e-27":{"id":"e-27","name":"","animationType":"preset","eventTypeId":"SCROLL_INTO_VIEW","action":{"id":"","actionTypeId":"SLIDE_EFFECT","instant":false,"config":{"actionListId":"slideInBottom","autoStopEventId":"e-28"}},"mediaQueries":["main","medium","small","tiny"],"target":{"id":"f4f04428-8e83-23ee-dfff-02c24ace3d04","appliesTo":"ELEMENT","styleBlockIds":[]},"targets":[{"id":"f4f04428-8e83-23ee-dfff-02c24ace3d04","appliesTo":"ELEMENT","styleBlockIds":[]}],"config":{"loop":false,"playInReverse":false,"scrollOffsetValue":10,"scrollOffsetUnit":"%","delay":200,"direction":"BOTTOM","effectIn":true},"createdOn":1559673099736},"e-29":{"id":"e-29","name":"","animationType":"custom","eventTypeId":"PAGE_START","action":{"id":"","actionTypeId":"GENERAL_START_ACTION","config":{"delay":0,"easing":"","duration":0,"actionListId":"a-11","affectedElements":{},"playInReverse":false,"autoStopEventId":"e-30"}},"mediaQueries":["main","medium","small","tiny"],"target":{"id":"64611fffa962170a270ce7fc","appliesTo":"PAGE","styleBlockIds":[]},"targets":[{"id":"64611fffa962170a270ce7fc","appliesTo":"PAGE","styleBlockIds":[]}],"config":{"loop":false,"playInReverse":false,"scrollOffsetValue":null,"scrollOffsetUnit":null,"delay":null,"direction":null,"effectIn":null},"createdOn":1559734452455},"e-31":{"id":"e-31","name":"","animationType":"preset","eventTypeId":"SCROLL_INTO_VIEW","action":{"id":"","actionTypeId":"SLIDE_EFFECT","instant":false,"config":{"actionListId":"slideInBottom","autoStopEventId":"e-32"}},"mediaQueries":["main","medium","small","tiny"],"target":{"id":"64611fffa962170a270ce7f7|cc9f3a7c-b70a-9255-0e6e-7503bb02bd60","appliesTo":"ELEMENT","styleBlockIds":[]},"targets":[{"id":"64611fffa962170a270ce7f7|cc9f3a7c-b70a-9255-0e6e-7503bb02bd60","appliesTo":"ELEMENT","styleBlockIds":[]}],"config":{"loop":false,"playInReverse":false,"scrollOffsetValue":20,"scrollOffsetUnit":"%","delay":0,"direction":"BOTTOM","effectIn":true},"createdOn":1676213767330},"e-33":{"id":"e-33","name":"","animationType":"preset","eventTypeId":"SCROLL_INTO_VIEW","action":{"id":"","actionTypeId":"GENERAL_START_ACTION","config":{"delay":0,"easing":"","duration":0,"actionListId":"a-8","affectedElements":{},"playInReverse":false,"autoStopEventId":"e-34"}},"mediaQueries":["main","medium","small","tiny"],"target":{"id":"64611fffa962170a270ce7f7|cc9f3a7c-b70a-9255-0e6e-7503bb02bd63","appliesTo":"ELEMENT","styleBlockIds":[]},"targets":[{"id":"64611fffa962170a270ce7f7|cc9f3a7c-b70a-9255-0e6e-7503bb02bd63","appliesTo":"ELEMENT","styleBlockIds":[]}],"config":{"loop":false,"playInReverse":false,"scrollOffsetValue":30,"scrollOffsetUnit":"%","delay":null,"direction":null,"effectIn":null},"createdOn":1676213767330},"e-35":{"id":"e-35","name":"","animationType":"preset","eventTypeId":"SCROLL_INTO_VIEW","action":{"id":"","actionTypeId":"SLIDE_EFFECT","instant":false,"config":{"actionListId":"slideInBottom","autoStopEventId":"e-55"}},"mediaQueries":["main","medium","small","tiny"],"target":{"id":"64611fffa962170a270ce7f7|cc9f3a7c-b70a-9255-0e6e-7503bb02bd67","appliesTo":"ELEMENT","styleBlockIds":[]},"targets":[{"id":"64611fffa962170a270ce7f7|cc9f3a7c-b70a-9255-0e6e-7503bb02bd67","appliesTo":"ELEMENT","styleBlockIds":[]}],"config":{"loop":false,"playInReverse":false,"scrollOffsetValue":20,"scrollOffsetUnit":"%","delay":200,"direction":"BOTTOM","effectIn":true},"createdOn":1676213767330},"e-37":{"id":"e-37","name":"","animationType":"custom","eventTypeId":"SCROLLING_IN_VIEW","action":{"id":"","actionTypeId":"GENERAL_CONTINUOUS_ACTION","config":{"actionListId":"a-12","affectedElements":{},"duration":0}},"mediaQueries":["main","medium","small","tiny"],"target":{"selector":".c-card","originalId":"64611fffa962170a270ce7f7|6020dc6c-9d7b-4059-5b10-702e04706fbd","appliesTo":"CLASS"},"targets":[{"selector":".c-card","originalId":"64611fffa962170a270ce7f7|6020dc6c-9d7b-4059-5b10-702e04706fbd","appliesTo":"CLASS"}],"config":[{"continuousParameterGroupId":"a-12-p","smoothing":90,"startsEntering":true,"addStartOffset":false,"addOffsetValue":50,"startsExiting":false,"addEndOffset":false,"endOffsetValue":50}],"createdOn":1603881512796},"e-38":{"id":"e-38","name":"","animationType":"preset","eventTypeId":"MOUSE_OVER","action":{"id":"","actionTypeId":"GENERAL_START_ACTION","config":{"delay":0,"easing":"","duration":0,"actionListId":"a","affectedElements":{},"playInReverse":false,"autoStopEventId":"e-56"}},"mediaQueries":["main","medium","small","tiny"],"target":{"id":"64611fffa962170a270ce7f7|22a5306f-0652-2884-56c5-c6811ef34fe2","appliesTo":"ELEMENT","styleBlockIds":[]},"targets":[{"id":"64611fffa962170a270ce7f7|22a5306f-0652-2884-56c5-c6811ef34fe2","appliesTo":"ELEMENT","styleBlockIds":[]}],"config":{"loop":false,"playInReverse":false,"scrollOffsetValue":null,"scrollOffsetUnit":null,"delay":null,"direction":null,"effectIn":null},"createdOn":1676308482207},"e-39":{"id":"e-39","name":"","animationType":"preset","eventTypeId":"MOUSE_OUT","action":{"id":"","actionTypeId":"GENERAL_START_ACTION","config":{"delay":0,"easing":"","duration":0,"actionListId":"a-2","affectedElements":{},"playInReverse":false,"autoStopEventId":"e-38"}},"mediaQueries":["main","medium","small","tiny"],"target":{"id":"64611fffa962170a270ce7f7|22a5306f-0652-2884-56c5-c6811ef34fe2","appliesTo":"ELEMENT","styleBlockIds":[]},"targets":[{"id":"64611fffa962170a270ce7f7|22a5306f-0652-2884-56c5-c6811ef34fe2","appliesTo":"ELEMENT","styleBlockIds":[]}],"config":{"loop":false,"playInReverse":false,"scrollOffsetValue":null,"scrollOffsetUnit":null,"delay":null,"direction":null,"effectIn":null},"createdOn":1676308482207},"e-40":{"id":"e-40","name":"","animationType":"preset","eventTypeId":"MOUSE_OVER","action":{"id":"","actionTypeId":"GENERAL_START_ACTION","config":{"delay":0,"easing":"","duration":0,"actionListId":"a","affectedElements":{},"playInReverse":false,"autoStopEventId":"e-41"}},"mediaQueries":["main","medium","small","tiny"],"target":{"id":"64611fffa962170a270ce7f7|9999a556-f326-fe72-e3ed-c50b7cc8f11a","appliesTo":"ELEMENT","styleBlockIds":[]},"targets":[{"id":"64611fffa962170a270ce7f7|9999a556-f326-fe72-e3ed-c50b7cc8f11a","appliesTo":"ELEMENT","styleBlockIds":[]}],"config":{"loop":false,"playInReverse":false,"scrollOffsetValue":null,"scrollOffsetUnit":null,"delay":null,"direction":null,"effectIn":null},"createdOn":1676309612677},"e-41":{"id":"e-41","name":"","animationType":"preset","eventTypeId":"MOUSE_OUT","action":{"id":"","actionTypeId":"GENERAL_START_ACTION","config":{"delay":0,"easing":"","duration":0,"actionListId":"a-2","affectedElements":{},"playInReverse":false,"autoStopEventId":"e-57"}},"mediaQueries":["main","medium","small","tiny"],"target":{"id":"64611fffa962170a270ce7f7|9999a556-f326-fe72-e3ed-c50b7cc8f11a","appliesTo":"ELEMENT","styleBlockIds":[]},"targets":[{"id":"64611fffa962170a270ce7f7|9999a556-f326-fe72-e3ed-c50b7cc8f11a","appliesTo":"ELEMENT","styleBlockIds":[]}],"config":{"loop":false,"playInReverse":false,"scrollOffsetValue":null,"scrollOffsetUnit":null,"delay":null,"direction":null,"effectIn":null},"createdOn":1676309612677},"e-46":{"id":"e-46","name":"","animationType":"preset","eventTypeId":"MOUSE_OVER","action":{"id":"","actionTypeId":"GENERAL_START_ACTION","config":{"delay":0,"easing":"","duration":0,"actionListId":"a","affectedElements":{},"playInReverse":false,"autoStopEventId":"e-47"}},"mediaQueries":["main","medium","small","tiny"],"target":{"id":"64611fffa962170a270ce7f7|8961528e-ad8b-f8de-dba7-edb4c0cd7345","appliesTo":"ELEMENT","styleBlockIds":[]},"targets":[{"id":"64611fffa962170a270ce7f7|8961528e-ad8b-f8de-dba7-edb4c0cd7345","appliesTo":"ELEMENT","styleBlockIds":[]}],"config":{"loop":false,"playInReverse":false,"scrollOffsetValue":null,"scrollOffsetUnit":null,"delay":null,"direction":null,"effectIn":null},"createdOn":1676311082682},"e-47":{"id":"e-47","name":"","animationType":"preset","eventTypeId":"MOUSE_OUT","action":{"id":"","actionTypeId":"GENERAL_START_ACTION","config":{"delay":0,"easing":"","duration":0,"actionListId":"a-2","affectedElements":{},"playInReverse":false,"autoStopEventId":"e-46"}},"mediaQueries":["main","medium","small","tiny"],"target":{"id":"64611fffa962170a270ce7f7|8961528e-ad8b-f8de-dba7-edb4c0cd7345","appliesTo":"ELEMENT","styleBlockIds":[]},"targets":[{"id":"64611fffa962170a270ce7f7|8961528e-ad8b-f8de-dba7-edb4c0cd7345","appliesTo":"ELEMENT","styleBlockIds":[]}],"config":{"loop":false,"playInReverse":false,"scrollOffsetValue":null,"scrollOffsetUnit":null,"delay":null,"direction":null,"effectIn":null},"createdOn":1676311082682},"e-48":{"id":"e-48","name":"","animationType":"custom","eventTypeId":"MOUSE_OVER","action":{"id":"","actionTypeId":"GENERAL_START_ACTION","config":{"delay":0,"easing":"","duration":0,"actionListId":"a-13","affectedElements":{},"playInReverse":false,"autoStopEventId":"e-49"}},"mediaQueries":["main","medium","small","tiny"],"target":{"id":"64611fffa962170a270ce800|1cf5bc1d-ddb0-2129-ffaa-07603b8a6d84","appliesTo":"ELEMENT","styleBlockIds":[]},"targets":[{"id":"64611fffa962170a270ce800|1cf5bc1d-ddb0-2129-ffaa-07603b8a6d84","appliesTo":"ELEMENT","styleBlockIds":[]}],"config":{"loop":false,"playInReverse":false,"scrollOffsetValue":null,"scrollOffsetUnit":null,"delay":null,"direction":null,"effectIn":null},"createdOn":1677589419970},"e-49":{"id":"e-49","name":"","animationType":"custom","eventTypeId":"MOUSE_OUT","action":{"id":"","actionTypeId":"GENERAL_START_ACTION","config":{"delay":0,"easing":"","duration":0,"actionListId":"a-14","affectedElements":{},"playInReverse":false,"autoStopEventId":"e-48"}},"mediaQueries":["main","medium","small","tiny"],"target":{"id":"64611fffa962170a270ce800|1cf5bc1d-ddb0-2129-ffaa-07603b8a6d84","appliesTo":"ELEMENT","styleBlockIds":[]},"targets":[{"id":"64611fffa962170a270ce800|1cf5bc1d-ddb0-2129-ffaa-07603b8a6d84","appliesTo":"ELEMENT","styleBlockIds":[]}],"config":{"loop":false,"playInReverse":false,"scrollOffsetValue":null,"scrollOffsetUnit":null,"delay":null,"direction":null,"effectIn":null},"createdOn":1677589419971},"e-50":{"id":"e-50","name":"","animationType":"preset","eventTypeId":"MOUSE_OVER","action":{"id":"","actionTypeId":"GENERAL_START_ACTION","config":{"delay":0,"easing":"","duration":0,"actionListId":"a-13","affectedElements":{},"playInReverse":false,"autoStopEventId":"e-51"}},"mediaQueries":["main","medium","small","tiny"],"target":{"id":"64611fffa962170a270ce7fb|1cf5bc1d-ddb0-2129-ffaa-07603b8a6d84","appliesTo":"ELEMENT","styleBlockIds":[]},"targets":[{"id":"64611fffa962170a270ce7fb|1cf5bc1d-ddb0-2129-ffaa-07603b8a6d84","appliesTo":"ELEMENT","styleBlockIds":[]}],"config":{"loop":false,"playInReverse":false,"scrollOffsetValue":null,"scrollOffsetUnit":null,"delay":null,"direction":null,"effectIn":null},"createdOn":1677590847917},"e-51":{"id":"e-51","name":"","animationType":"preset","eventTypeId":"MOUSE_OUT","action":{"id":"","actionTypeId":"GENERAL_START_ACTION","config":{"delay":0,"easing":"","duration":0,"actionListId":"a-14","affectedElements":{},"playInReverse":false,"autoStopEventId":"e-50"}},"mediaQueries":["main","medium","small","tiny"],"target":{"id":"64611fffa962170a270ce7fb|1cf5bc1d-ddb0-2129-ffaa-07603b8a6d84","appliesTo":"ELEMENT","styleBlockIds":[]},"targets":[{"id":"64611fffa962170a270ce7fb|1cf5bc1d-ddb0-2129-ffaa-07603b8a6d84","appliesTo":"ELEMENT","styleBlockIds":[]}],"config":{"loop":false,"playInReverse":false,"scrollOffsetValue":null,"scrollOffsetUnit":null,"delay":null,"direction":null,"effectIn":null},"createdOn":1677590847917},"e-52":{"id":"e-52","name":"","animationType":"preset","eventTypeId":"MOUSE_OVER","action":{"id":"","actionTypeId":"GENERAL_START_ACTION","config":{"delay":0,"easing":"","duration":0,"actionListId":"a","affectedElements":{},"playInReverse":false,"autoStopEventId":"e-53"}},"mediaQueries":["main","medium","small","tiny"],"target":{"id":"64611fffa962170a270ce7f7|3c36b408-6edb-a947-ae21-e4d0550f7f21","appliesTo":"ELEMENT","styleBlockIds":[]},"targets":[{"id":"64611fffa962170a270ce7f7|3c36b408-6edb-a947-ae21-e4d0550f7f21","appliesTo":"ELEMENT","styleBlockIds":[]}],"config":{"loop":false,"playInReverse":false,"scrollOffsetValue":null,"scrollOffsetUnit":null,"delay":null,"direction":null,"effectIn":null},"createdOn":1679498830689},"e-53":{"id":"e-53","name":"","animationType":"preset","eventTypeId":"MOUSE_OUT","action":{"id":"","actionTypeId":"GENERAL_START_ACTION","config":{"delay":0,"easing":"","duration":0,"actionListId":"a-2","affectedElements":{},"playInReverse":false,"autoStopEventId":"e-52"}},"mediaQueries":["main","medium","small","tiny"],"target":{"id":"64611fffa962170a270ce7f7|3c36b408-6edb-a947-ae21-e4d0550f7f21","appliesTo":"ELEMENT","styleBlockIds":[]},"targets":[{"id":"64611fffa962170a270ce7f7|3c36b408-6edb-a947-ae21-e4d0550f7f21","appliesTo":"ELEMENT","styleBlockIds":[]}],"config":{"loop":false,"playInReverse":false,"scrollOffsetValue":null,"scrollOffsetUnit":null,"delay":null,"direction":null,"effectIn":null},"createdOn":1679498830689},"e-54":{"id":"e-54","name":"","animationType":"custom","eventTypeId":"MOUSE_OVER","action":{"id":"","actionTypeId":"GENERAL_START_ACTION","config":{"delay":0,"easing":"","duration":0,"actionListId":"a-16","affectedElements":{},"playInReverse":false,"autoStopEventId":"e-55"}},"mediaQueries":["main"],"target":{"selector":".b-image","originalId":"64611fffa962170a270ce7ff|48cbf837-b940-f940-f8e4-4ff3c4f97fb9","appliesTo":"CLASS"},"targets":[{"selector":".b-image","originalId":"64611fffa962170a270ce7ff|48cbf837-b940-f940-f8e4-4ff3c4f97fb9","appliesTo":"CLASS"}],"config":{"loop":false,"playInReverse":false,"scrollOffsetValue":null,"scrollOffsetUnit":null,"delay":null,"direction":null,"effectIn":null},"createdOn":1603177519534},"e-55":{"id":"e-55","name":"","animationType":"custom","eventTypeId":"MOUSE_OUT","action":{"id":"","actionTypeId":"GENERAL_START_ACTION","config":{"delay":0,"easing":"","duration":0,"actionListId":"a-17","affectedElements":{},"playInReverse":false,"autoStopEventId":"e-54"}},"mediaQueries":["main"],"target":{"selector":".b-image","originalId":"64611fffa962170a270ce7ff|48cbf837-b940-f940-f8e4-4ff3c4f97fb9","appliesTo":"CLASS"},"targets":[{"selector":".b-image","originalId":"64611fffa962170a270ce7ff|48cbf837-b940-f940-f8e4-4ff3c4f97fb9","appliesTo":"CLASS"}],"config":{"loop":false,"playInReverse":false,"scrollOffsetValue":null,"scrollOffsetUnit":null,"delay":null,"direction":null,"effectIn":null},"createdOn":1603177519534},"e-56":{"id":"e-56","name":"","animationType":"custom","eventTypeId":"MOUSE_CLICK","action":{"id":"","actionTypeId":"GENERAL_START_ACTION","config":{"delay":0,"easing":"","duration":0,"actionListId":"a-18","affectedElements":{},"playInReverse":false,"autoStopEventId":"e-57"}},"mediaQueries":["main"],"target":{"selector":".b-image","originalId":"64611fffa962170a270ce7ff|48cbf837-b940-f940-f8e4-4ff3c4f97fb9","appliesTo":"CLASS"},"targets":[{"selector":".b-image","originalId":"64611fffa962170a270ce7ff|48cbf837-b940-f940-f8e4-4ff3c4f97fb9","appliesTo":"CLASS"}],"config":{"loop":false,"playInReverse":false,"scrollOffsetValue":null,"scrollOffsetUnit":null,"delay":null,"direction":null,"effectIn":null},"createdOn":1603180268757},"e-58":{"id":"e-58","name":"","animationType":"custom","eventTypeId":"MOUSE_CLICK","action":{"id":"","actionTypeId":"GENERAL_START_ACTION","config":{"delay":0,"easing":"","duration":0,"actionListId":"a-19","affectedElements":{},"playInReverse":false,"autoStopEventId":"e-59"}},"mediaQueries":["main"],"target":{"selector":".ci-zoom-in-img","originalId":"64611fffa962170a270ce7ff|41c40855-99fb-14aa-1f59-181254d0a1eb","appliesTo":"CLASS"},"targets":[{"selector":".ci-zoom-in-img","originalId":"64611fffa962170a270ce7ff|41c40855-99fb-14aa-1f59-181254d0a1eb","appliesTo":"CLASS"}],"config":{"loop":false,"playInReverse":false,"scrollOffsetValue":null,"scrollOffsetUnit":null,"delay":null,"direction":null,"effectIn":null},"createdOn":1603184046448},"e-60":{"id":"e-60","name":"","animationType":"custom","eventTypeId":"MOUSE_MOVE","action":{"id":"","actionTypeId":"GENERAL_CONTINUOUS_ACTION","config":{"actionListId":"a-20","affectedElements":{},"duration":0}},"mediaQueries":["main"],"target":{"selector":".b-zoom-in-img","originalId":"64611fffa962170a270ce7ff|41c40855-99fb-14aa-1f59-181254d0a1f0","appliesTo":"CLASS"},"targets":[{"selector":".b-zoom-in-img","originalId":"64611fffa962170a270ce7ff|41c40855-99fb-14aa-1f59-181254d0a1f0","appliesTo":"CLASS"}],"config":[{"continuousParameterGroupId":"a-20-p","selectedAxis":"X_AXIS","basedOn":"ELEMENT","reverse":false,"smoothing":90,"restingState":50},{"continuousParameterGroupId":"a-20-p-2","selectedAxis":"Y_AXIS","basedOn":"ELEMENT","reverse":false,"smoothing":90,"restingState":50}],"createdOn":1603184046448},"e-61":{"id":"e-61","name":"","animationType":"custom","eventTypeId":"MOUSE_OVER","action":{"id":"","actionTypeId":"GENERAL_START_ACTION","config":{"delay":0,"easing":"","duration":0,"actionListId":"a-21","affectedElements":{},"playInReverse":false,"autoStopEventId":"e-62"}},"mediaQueries":["main"],"target":{"selector":".b-image","originalId":"642870890da4494ba5f81eb3|05f62928-2792-28fe-f0e3-dcace09043cf","appliesTo":"CLASS"},"targets":[{"selector":".b-image","originalId":"642870890da4494ba5f81eb3|05f62928-2792-28fe-f0e3-dcace09043cf","appliesTo":"CLASS"}],"config":{"loop":false,"playInReverse":false,"scrollOffsetValue":null,"scrollOffsetUnit":null,"delay":null,"direction":null,"effectIn":null},"createdOn":1603177519534},"e-62":{"id":"e-62","name":"","animationType":"custom","eventTypeId":"MOUSE_OUT","action":{"id":"","actionTypeId":"GENERAL_START_ACTION","config":{"delay":0,"easing":"","duration":0,"actionListId":"a-22","affectedElements":{},"playInReverse":false,"autoStopEventId":"e-61"}},"mediaQueries":["main"],"target":{"selector":".b-image","originalId":"642870890da4494ba5f81eb3|05f62928-2792-28fe-f0e3-dcace09043cf","appliesTo":"CLASS"},"targets":[{"selector":".b-image","originalId":"642870890da4494ba5f81eb3|05f62928-2792-28fe-f0e3-dcace09043cf","appliesTo":"CLASS"}],"config":{"loop":false,"playInReverse":false,"scrollOffsetValue":null,"scrollOffsetUnit":null,"delay":null,"direction":null,"effectIn":null},"createdOn":1603177519534},"e-63":{"id":"e-63","name":"","animationType":"preset","eventTypeId":"MOUSE_OVER","action":{"id":"","actionTypeId":"GENERAL_START_ACTION","config":{"delay":0,"easing":"","duration":0,"actionListId":"a","affectedElements":{},"playInReverse":false,"autoStopEventId":"e-64"}},"mediaQueries":["main","medium","small","tiny"],"target":{"id":"64611fffa962170a270ce7f7|90871753-0c94-b657-616c-dbec2bea4db4","appliesTo":"ELEMENT","styleBlockIds":[]},"targets":[{"id":"64611fffa962170a270ce7f7|90871753-0c94-b657-616c-dbec2bea4db4","appliesTo":"ELEMENT","styleBlockIds":[]}],"config":{"loop":false,"playInReverse":false,"scrollOffsetValue":null,"scrollOffsetUnit":null,"delay":null,"direction":null,"effectIn":null},"createdOn":1681812961311},"e-64":{"id":"e-64","name":"","animationType":"preset","eventTypeId":"MOUSE_OUT","action":{"id":"","actionTypeId":"GENERAL_START_ACTION","config":{"delay":0,"easing":"","duration":0,"actionListId":"a-2","affectedElements":{},"playInReverse":false,"autoStopEventId":"e-63"}},"mediaQueries":["main","medium","small","tiny"],"target":{"id":"64611fffa962170a270ce7f7|90871753-0c94-b657-616c-dbec2bea4db4","appliesTo":"ELEMENT","styleBlockIds":[]},"targets":[{"id":"64611fffa962170a270ce7f7|90871753-0c94-b657-616c-dbec2bea4db4","appliesTo":"ELEMENT","styleBlockIds":[]}],"config":{"loop":false,"playInReverse":false,"scrollOffsetValue":null,"scrollOffsetUnit":null,"delay":null,"direction":null,"effectIn":null},"createdOn":1681812961311},"e-65":{"id":"e-65","name":"","animationType":"preset","eventTypeId":"MOUSE_OVER","action":{"id":"","actionTypeId":"GENERAL_START_ACTION","config":{"delay":0,"easing":"","duration":0,"actionListId":"a","affectedElements":{},"playInReverse":false,"autoStopEventId":"e-66"}},"mediaQueries":["main","medium","small","tiny"],"target":{"id":"64611fffa962170a270ce7f7|2ba27f47-14be-aff2-85bf-1a97ed06a094","appliesTo":"ELEMENT","styleBlockIds":[]},"targets":[{"id":"64611fffa962170a270ce7f7|2ba27f47-14be-aff2-85bf-1a97ed06a094","appliesTo":"ELEMENT","styleBlockIds":[]}],"config":{"loop":false,"playInReverse":false,"scrollOffsetValue":null,"scrollOffsetUnit":null,"delay":null,"direction":null,"effectIn":null},"createdOn":1684085239926},"e-66":{"id":"e-66","name":"","animationType":"preset","eventTypeId":"MOUSE_OUT","action":{"id":"","actionTypeId":"GENERAL_START_ACTION","config":{"delay":0,"easing":"","duration":0,"actionListId":"a-2","affectedElements":{},"playInReverse":false,"autoStopEventId":"e-65"}},"mediaQueries":["main","medium","small","tiny"],"target":{"id":"64611fffa962170a270ce7f7|2ba27f47-14be-aff2-85bf-1a97ed06a094","appliesTo":"ELEMENT","styleBlockIds":[]},"targets":[{"id":"64611fffa962170a270ce7f7|2ba27f47-14be-aff2-85bf-1a97ed06a094","appliesTo":"ELEMENT","styleBlockIds":[]}],"config":{"loop":false,"playInReverse":false,"scrollOffsetValue":null,"scrollOffsetUnit":null,"delay":null,"direction":null,"effectIn":null},"createdOn":1684085239926}},"actionLists":{"a":{"id":"a","title":"Button Move","actionItemGroups":[{"actionItems":[{"id":"a-n-2","actionTypeId":"TRANSFORM_MOVE","config":{"delay":0,"easing":"outQuad","duration":400,"target":{"useEventTarget":"CHILDREN","selector":".button","selectorGuids":["d052fb55-db42-5ceb-0051-9e25cb9ecf45"]},"xValue":-8,"yValue":-8,"xUnit":"PX","yUnit":"PX","zUnit":"PX"}}]},{"actionItems":[{"id":"a-n","actionTypeId":"TRANSFORM_MOVE","config":{"delay":0,"easing":"outQuad","duration":200,"target":{"useEventTarget":"CHILDREN","selector":".button","selectorGuids":["d052fb55-db42-5ceb-0051-9e25cb9ecf45"]},"xValue":0,"yValue":0,"xUnit":"PX","yUnit":"PX","zUnit":"PX"}}]}],"useFirstGroupAsInitialState":true,"createdOn":1559210468582},"a-2":{"id":"a-2","title":"Button Return","actionItemGroups":[{"actionItems":[{"id":"a-2-n","actionTypeId":"TRANSFORM_MOVE","config":{"delay":0,"easing":"outQuad","duration":200,"target":{"useEventTarget":"CHILDREN","selector":".button","selectorGuids":["d052fb55-db42-5ceb-0051-9e25cb9ecf45"]},"xValue":-8,"yValue":-8,"xUnit":"PX","yUnit":"PX","zUnit":"PX"}}]}],"useFirstGroupAsInitialState":false,"createdOn":1559210468582},"a-4":{"id":"a-4","title":"Content Slide In","actionItemGroups":[{"actionItems":[{"id":"a-4-n","actionTypeId":"TRANSFORM_MOVE","config":{"delay":0,"easing":"","duration":500,"target":{"id":"64611fffa962170a270ce7f7|4d25a190-de63-e23d-efe3-a29000c37211"},"yValue":60,"xUnit":"PX","yUnit":"PX","zUnit":"PX"}},{"id":"a-4-n-10","actionTypeId":"STYLE_OPACITY","config":{"delay":0,"easing":"","duration":500,"target":{"id":"64611fffa962170a270ce7f7|a4785d04-0e05-8067-457b-d9ff66dbdc0e"},"value":0,"unit":""}},{"id":"a-4-n-9","actionTypeId":"TRANSFORM_MOVE","config":{"delay":0,"easing":"","duration":500,"target":{"id":"64611fffa962170a270ce7f7|a4785d04-0e05-8067-457b-d9ff66dbdc0e"},"yValue":60,"xUnit":"PX","yUnit":"PX","zUnit":"PX"}},{"id":"a-4-n-6","actionTypeId":"STYLE_OPACITY","config":{"delay":0,"easing":"","duration":500,"target":{"id":"64611fffa962170a270ce7f7|22bdcc57-2556-cdbf-cbc3-a0a201a6607d"},"value":0,"unit":""}},{"id":"a-4-n-5","actionTypeId":"TRANSFORM_MOVE","config":{"delay":0,"easing":"","duration":500,"target":{"id":"64611fffa962170a270ce7f7|22bdcc57-2556-cdbf-cbc3-a0a201a6607d"},"yValue":60,"xUnit":"PX","yUnit":"PX","zUnit":"PX"}},{"id":"a-4-n-3","actionTypeId":"STYLE_OPACITY","config":{"delay":0,"easing":"","duration":500,"target":{"id":"64611fffa962170a270ce7f7|4d25a190-de63-e23d-efe3-a29000c37211"},"value":0,"unit":""}}]},{"actionItems":[{"id":"a-4-n-2","actionTypeId":"TRANSFORM_MOVE","config":{"delay":0,"easing":"ease","duration":800,"target":{"id":"64611fffa962170a270ce7f7|4d25a190-de63-e23d-efe3-a29000c37211"},"yValue":0,"xUnit":"PX","yUnit":"PX","zUnit":"PX"}},{"id":"a-4-n-4","actionTypeId":"STYLE_OPACITY","config":{"delay":0,"easing":"ease","duration":800,"target":{"id":"64611fffa962170a270ce7f7|4d25a190-de63-e23d-efe3-a29000c37211"},"value":1,"unit":""}},{"id":"a-4-n-7","actionTypeId":"TRANSFORM_MOVE","config":{"delay":200,"easing":"ease","duration":800,"target":{"id":"64611fffa962170a270ce7f7|22bdcc57-2556-cdbf-cbc3-a0a201a6607d"},"yValue":0,"xUnit":"PX","yUnit":"PX","zUnit":"PX"}},{"id":"a-4-n-8","actionTypeId":"STYLE_OPACITY","config":{"delay":200,"easing":"ease","duration":800,"target":{"id":"64611fffa962170a270ce7f7|22bdcc57-2556-cdbf-cbc3-a0a201a6607d"},"value":1,"unit":""}},{"id":"a-4-n-12","actionTypeId":"STYLE_OPACITY","config":{"delay":200,"easing":"ease","duration":800,"target":{"id":"64611fffa962170a270ce7f7|a4785d04-0e05-8067-457b-d9ff66dbdc0e"},"value":1,"unit":""}},{"id":"a-4-n-11","actionTypeId":"TRANSFORM_MOVE","config":{"delay":200,"easing":"ease","duration":800,"target":{"id":"64611fffa962170a270ce7f7|a4785d04-0e05-8067-457b-d9ff66dbdc0e"},"yValue":0,"xUnit":"PX","yUnit":"PX","zUnit":"PX"}}]}],"useFirstGroupAsInitialState":true,"createdOn":1559214715842},"a-5":{"id":"a-5","title":"Scroll Line","actionItemGroups":[{"actionItems":[{"id":"a-5-n","actionTypeId":"TRANSFORM_MOVE","config":{"delay":2000,"easing":"inCubic","duration":800,"target":{"id":"64611fffa962170a270ce7f7|b36549d8-b780-7fb7-8674-0b37bf71500b"},"yValue":110,"xUnit":"PX","yUnit":"PX","zUnit":"PX"}}]},{"actionItems":[{"id":"a-5-n-2","actionTypeId":"TRANSFORM_MOVE","config":{"delay":0,"easing":"","duration":0,"target":{"id":"64611fffa962170a270ce7f7|b36549d8-b780-7fb7-8674-0b37bf71500b"},"yValue":-110,"xUnit":"PX","yUnit":"PX","zUnit":"PX"}}]},{"actionItems":[{"id":"a-5-n-3","actionTypeId":"TRANSFORM_MOVE","config":{"delay":0,"easing":"outCubic","duration":800,"target":{"id":"64611fffa962170a270ce7f7|b36549d8-b780-7fb7-8674-0b37bf71500b"},"yValue":0,"xUnit":"PX","yUnit":"PX","zUnit":"PX"}}]}],"useFirstGroupAsInitialState":false,"createdOn":1559301990277},"a-6":{"id":"a-6","title":"Mockup Hover","actionItemGroups":[{"actionItems":[{"id":"a-6-n","actionTypeId":"TRANSFORM_MOVE","config":{"delay":0,"easing":"","duration":500,"target":{"useEventTarget":"CHILDREN","selector":".mockup-arrow","selectorGuids":["a3ab0edb-8dd3-183e-3313-3e1df940ca25"]},"xValue":-35,"xUnit":"PX","yUnit":"PX","zUnit":"PX"}},{"id":"a-6-n-4","actionTypeId":"STYLE_OPACITY","config":{"delay":0,"easing":"","duration":500,"target":{"useEventTarget":"CHILDREN","selector":".mockup-hover-text","selectorGuids":["1132bc89-718a-1be8-a974-c5e448034e82"]},"value":0,"unit":""}},{"id":"a-6-n-3","actionTypeId":"TRANSFORM_MOVE","config":{"delay":0,"easing":"","duration":500,"target":{"useEventTarget":"CHILDREN","selector":".mockup-hover-text","selectorGuids":["1132bc89-718a-1be8-a974-c5e448034e82"]},"xValue":-9,"xUnit":"PX","yUnit":"PX","zUnit":"PX"}}]},{"actionItems":[{"id":"a-6-n-5","actionTypeId":"STYLE_OPACITY","config":{"delay":0,"easing":"outQuad","duration":100,"target":{"useEventTarget":"CHILDREN","selector":".mockup-hover-text","selectorGuids":["1132bc89-718a-1be8-a974-c5e448034e82"]},"value":1,"unit":""}},{"id":"a-6-n-6","actionTypeId":"TRANSFORM_MOVE","config":{"delay":0,"easing":"outQuad","duration":100,"target":{"useEventTarget":"CHILDREN","selector":".mockup-hover-text","selectorGuids":["1132bc89-718a-1be8-a974-c5e448034e82"]},"xValue":0,"xUnit":"PX","yUnit":"PX","zUnit":"PX"}},{"id":"a-6-n-7","actionTypeId":"TRANSFORM_MOVE","config":{"delay":0,"easing":"outQuad","duration":300,"target":{"useEventTarget":"CHILDREN","selector":".mockup-img","selectorGuids":["51cf83b5-b1be-0579-260d-d4ec2f1dda44"]},"xValue":8,"yValue":-8,"xUnit":"PX","yUnit":"PX","zUnit":"PX"}},{"id":"a-6-n-2","actionTypeId":"TRANSFORM_MOVE","config":{"delay":100,"easing":"outQuad","duration":200,"target":{"useEventTarget":"CHILDREN","selector":".mockup-arrow","selectorGuids":["a3ab0edb-8dd3-183e-3313-3e1df940ca25"]},"xValue":0,"xUnit":"PX","yUnit":"PX","zUnit":"PX"}}]}],"useFirstGroupAsInitialState":true,"createdOn":1559320190270},"a-7":{"id":"a-7","title":"Mockup Hover Out","actionItemGroups":[{"actionItems":[{"id":"a-7-n-4","actionTypeId":"STYLE_OPACITY","config":{"delay":0,"easing":"outQuad","duration":200,"target":{"useEventTarget":"CHILDREN","selector":".mockup-hover-text","selectorGuids":["1132bc89-718a-1be8-a974-c5e448034e82"]},"value":0,"unit":""}},{"id":"a-7-n-3","actionTypeId":"TRANSFORM_MOVE","config":{"delay":0,"easing":"outQuad","duration":200,"target":{"useEventTarget":"CHILDREN","selector":".mockup-hover-text","selectorGuids":["1132bc89-718a-1be8-a974-c5e448034e82"]},"xValue":-10,"xUnit":"PX","yUnit":"PX","zUnit":"PX"}},{"id":"a-7-n-2","actionTypeId":"TRANSFORM_MOVE","config":{"delay":0,"easing":"outQuad","duration":200,"target":{"useEventTarget":"CHILDREN","selector":".mockup-arrow","selectorGuids":["a3ab0edb-8dd3-183e-3313-3e1df940ca25"]},"xValue":-35,"xUnit":"PX","yUnit":"PX","zUnit":"PX"}},{"id":"a-7-n-5","actionTypeId":"TRANSFORM_MOVE","config":{"delay":0,"easing":"outQuad","duration":200,"target":{"useEventTarget":"CHILDREN","selector":".mockup-img","selectorGuids":["51cf83b5-b1be-0579-260d-d4ec2f1dda44"]},"xValue":0,"yValue":0,"xUnit":"PX","yUnit":"PX","zUnit":"PX"}}]}],"useFirstGroupAsInitialState":false,"createdOn":1559320190270},"a-8":{"id":"a-8","title":"Highlight (body)","actionItemGroups":[{"actionItems":[{"id":"a-8-n","actionTypeId":"TRANSFORM_SCALE","config":{"delay":0,"easing":"","duration":500,"target":{"useEventTarget":"CHILDREN","selector":".highlight","selectorGuids":["d3826c90-e0e4-53e4-838b-d77ffe11783f"]},"xValue":0,"locked":false}}]},{"actionItems":[{"id":"a-8-n-3","actionTypeId":"TRANSFORM_SCALE","config":{"delay":500,"easing":"outCubic","duration":600,"target":{"useEventTarget":"CHILDREN","selector":".highlight","selectorGuids":["d3826c90-e0e4-53e4-838b-d77ffe11783f"]},"xValue":1,"locked":false}}]}],"useFirstGroupAsInitialState":true,"createdOn":1559212816157},"a-11":{"id":"a-11","title":"Content Slide (Project Page)","actionItemGroups":[{"actionItems":[{"id":"a-11-n-13","actionTypeId":"TRANSFORM_MOVE","config":{"delay":0,"easing":"","duration":500,"target":{"id":"64611fffa962170a270ce7fc|9768578e-f967-712e-9acc-5bd5bb5e7a7f"},"yValue":60,"xUnit":"PX","yUnit":"PX","zUnit":"PX"}},{"id":"a-11-n-14","actionTypeId":"STYLE_OPACITY","config":{"delay":0,"easing":"","duration":500,"target":{"id":"64611fffa962170a270ce7fc|9768578e-f967-712e-9acc-5bd5bb5e7a7f"},"value":0,"unit":""}},{"id":"a-11-n-15","actionTypeId":"TRANSFORM_MOVE","config":{"delay":0,"easing":"","duration":500,"target":{"id":"64611fffa962170a270ce7fc|50fc42ed-e88e-ebab-f6b0-bd5e8e331fbc"},"yValue":60,"xUnit":"PX","yUnit":"PX","zUnit":"PX"}},{"id":"a-11-n-16","actionTypeId":"STYLE_OPACITY","config":{"delay":0,"easing":"","duration":500,"target":{"id":"64611fffa962170a270ce7fc|50fc42ed-e88e-ebab-f6b0-bd5e8e331fbc"},"value":0,"unit":""}}]},{"actionItems":[{"id":"a-11-n-7","actionTypeId":"TRANSFORM_MOVE","config":{"delay":0,"easing":"ease","duration":800,"target":{"id":"64611fffa962170a270ce7fc|9768578e-f967-712e-9acc-5bd5bb5e7a7f"},"yValue":0,"xUnit":"PX","yUnit":"PX","zUnit":"PX"}},{"id":"a-11-n-8","actionTypeId":"STYLE_OPACITY","config":{"delay":0,"easing":"ease","duration":800,"target":{"id":"64611fffa962170a270ce7fc|9768578e-f967-712e-9acc-5bd5bb5e7a7f"},"value":1,"unit":""}},{"id":"a-11-n-12","actionTypeId":"TRANSFORM_MOVE","config":{"delay":200,"easing":"ease","duration":800,"target":{"id":"64611fffa962170a270ce7fc|50fc42ed-e88e-ebab-f6b0-bd5e8e331fbc"},"yValue":0,"xUnit":"PX","yUnit":"PX","zUnit":"PX"}},{"id":"a-11-n-11","actionTypeId":"STYLE_OPACITY","config":{"delay":200,"easing":"ease","duration":800,"target":{"id":"64611fffa962170a270ce7fc|50fc42ed-e88e-ebab-f6b0-bd5e8e331fbc"},"value":1,"unit":""}}]}],"useFirstGroupAsInitialState":true,"createdOn":1559214715842},"a-12":{"id":"a-12","title":"Cards","continuousParameterGroups":[{"id":"a-12-p","type":"SCROLL_PROGRESS","parameterLabel":"Scroll","continuousActionGroups":[{"keyframe":40,"actionItems":[{"id":"a-12-n","actionTypeId":"TRANSFORM_SCALE","config":{"delay":0,"easing":"","duration":500,"target":{"useEventTarget":true,"id":"64611fffa962170a270ce7f7|6020dc6c-9d7b-4059-5b10-702e04706fbd"},"xValue":1,"yValue":1,"locked":true}}]},{"keyframe":100,"actionItems":[{"id":"a-12-n-2","actionTypeId":"TRANSFORM_SCALE","config":{"delay":0,"easing":"","duration":500,"target":{"useEventTarget":true,"id":"64611fffa962170a270ce7f7|6020dc6c-9d7b-4059-5b10-702e04706fbd"},"xValue":0.8,"yValue":0.8,"locked":true}}]}]}],"createdOn":1603881517811},"a-13":{"id":"a-13","title":"arrow move right","actionItemGroups":[{"actionItems":[{"id":"a-13-n","actionTypeId":"TRANSFORM_MOVE","config":{"delay":0,"easing":"ease","duration":200,"target":{"useEventTarget":"CHILDREN","selector":".image-7","selectorGuids":["b4e61fe0-9738-a5cb-f556-2a4a1635d63b"]},"xValue":8,"xUnit":"px","yUnit":"PX","zUnit":"PX"}}]}],"useFirstGroupAsInitialState":false,"createdOn":1677589476727},"a-14":{"id":"a-14","title":"arrow move back","actionItemGroups":[{"actionItems":[{"id":"a-14-n","actionTypeId":"TRANSFORM_MOVE","config":{"delay":0,"easing":"ease","duration":200,"target":{"useEventTarget":"CHILDREN","selector":".image-7","selectorGuids":["b4e61fe0-9738-a5cb-f556-2a4a1635d63b"]},"xValue":0,"xUnit":"px","yUnit":"PX","zUnit":"PX"}}]}],"useFirstGroupAsInitialState":false,"createdOn":1677589703208},"a-16":{"id":"a-16","title":"Thumb Img Mouse IN","actionItemGroups":[{"actionItems":[{"id":"a-16-n","actionTypeId":"TRANSFORM_SCALE","config":{"delay":0,"easing":"ease","duration":350,"target":{"useEventTarget":"CHILDREN","selector":".c-img-thumbnail","selectorGuids":["b159e67d-4b16-ccf4-b127-32a39d52111a"]},"xValue":0.95,"yValue":0.95,"locked":true}},{"id":"a-16-n-2","actionTypeId":"TRANSFORM_SCALE","config":{"delay":0,"easing":"","duration":500,"target":{"useEventTarget":"CHILDREN","selector":".img-thumbnail-bg","selectorGuids":["b159e67d-4b16-ccf4-b127-32a39d52112b"]},"xValue":1,"yValue":1,"locked":true}},{"id":"a-16-n-3","actionTypeId":"STYLE_OPACITY","config":{"delay":0,"easing":"ease","duration":350,"target":{"useEventTarget":"CHILDREN","selector":".c-img-thumb-overlay","selectorGuids":["b159e67d-4b16-ccf4-b127-32a39d521128"]},"value":0,"unit":""}},{"id":"a-16-n-4","actionTypeId":"TRANSFORM_MOVE","config":{"delay":0,"easing":"ease","duration":350,"target":{"useEventTarget":"CHILDREN","selector":".img-thumb-overlay-text","selectorGuids":["b159e67d-4b16-ccf4-b127-32a39d521127"]},"yValue":0,"xUnit":"%","yUnit":"%","zUnit":"PX"}},{"id":"a-16-n-5","actionTypeId":"TRANSFORM_MOVE","config":{"delay":0,"easing":"","duration":500,"target":{"useEventTarget":"CHILDREN","selector":".img-thumb-overlay-text","selectorGuids":["b159e67d-4b16-ccf4-b127-32a39d521127"]},"yValue":100,"xUnit":"PX","yUnit":"%","zUnit":"PX"}},{"id":"a-16-n-6","actionTypeId":"STYLE_OPACITY","config":{"delay":0,"easing":"","duration":500,"target":{"useEventTarget":"CHILDREN","selector":".img-thumb-overlay-text","selectorGuids":["b159e67d-4b16-ccf4-b127-32a39d521127"]},"value":0,"unit":""}},{"id":"a-16-n-7","actionTypeId":"TRANSFORM_SCALE","config":{"delay":0,"easing":"ease","duration":350,"target":{"useEventTarget":"CHILDREN","selector":".img-thumb-overlay-icon","selectorGuids":["b159e67d-4b16-ccf4-b127-32a39d521126"]},"xValue":0,"yValue":0,"locked":true}},{"id":"a-16-n-8","actionTypeId":"STYLE_OPACITY","config":{"delay":0,"easing":"ease","duration":350,"target":{"useEventTarget":"CHILDREN","selector":".img-thumb-overlay-icon","selectorGuids":["b159e67d-4b16-ccf4-b127-32a39d521126"]},"value":0,"unit":""}}]},{"actionItems":[{"id":"a-16-n-9","actionTypeId":"TRANSFORM_SCALE","config":{"delay":0,"easing":"ease","duration":350,"target":{"useEventTarget":"CHILDREN","selector":".c-img-thumbnail","selectorGuids":["b159e67d-4b16-ccf4-b127-32a39d52111a"]},"xValue":1,"yValue":1,"locked":true}},{"id":"a-16-n-10","actionTypeId":"TRANSFORM_SCALE","config":{"delay":0,"easing":"ease","duration":350,"target":{"useEventTarget":"CHILDREN","selector":".img-thumbnail-bg","selectorGuids":["b159e67d-4b16-ccf4-b127-32a39d52112b"]},"xValue":0.95,"yValue":0.95,"locked":true}},{"id":"a-16-n-11","actionTypeId":"STYLE_OPACITY","config":{"delay":0,"easing":"ease","duration":350,"target":{"useEventTarget":"CHILDREN","selector":".c-img-thumb-overlay","selectorGuids":["b159e67d-4b16-ccf4-b127-32a39d521128"]},"value":1,"unit":""}},{"id":"a-16-n-12","actionTypeId":"STYLE_OPACITY","config":{"delay":200,"easing":"ease","duration":350,"target":{"useEventTarget":"CHILDREN","selector":".img-thumb-overlay-icon","selectorGuids":["b159e67d-4b16-ccf4-b127-32a39d521126"]},"value":1,"unit":""}},{"id":"a-16-n-13","actionTypeId":"TRANSFORM_SCALE","config":{"delay":200,"easing":"ease","duration":350,"target":{"useEventTarget":"CHILDREN","selector":".img-thumb-overlay-icon","selectorGuids":["b159e67d-4b16-ccf4-b127-32a39d521126"]},"xValue":1,"yValue":1,"locked":true}},{"id":"a-16-n-14","actionTypeId":"TRANSFORM_MOVE","config":{"delay":350,"easing":"ease","duration":350,"target":{"useEventTarget":"CHILDREN","selector":".img-thumb-overlay-text","selectorGuids":["b159e67d-4b16-ccf4-b127-32a39d521127"]},"yValue":0,"xUnit":"%","yUnit":"%","zUnit":"PX"}},{"id":"a-16-n-15","actionTypeId":"STYLE_OPACITY","config":{"delay":350,"easing":"ease","duration":350,"target":{"useEventTarget":"CHILDREN","selector":".img-thumb-overlay-text","selectorGuids":["b159e67d-4b16-ccf4-b127-32a39d521127"]},"value":1,"unit":""}}]}],"useFirstGroupAsInitialState":true,"createdOn":1603177528364},"a-17":{"id":"a-17","title":"Thumb Img Mouse OUT","actionItemGroups":[{"actionItems":[{"id":"a-17-n","actionTypeId":"TRANSFORM_SCALE","config":{"delay":0,"easing":"ease","duration":350,"target":{"useEventTarget":"CHILDREN","selector":".c-img-thumbnail","selectorGuids":["b159e67d-4b16-ccf4-b127-32a39d52111a"]},"xValue":0.95,"yValue":0.95,"locked":true}},{"id":"a-17-n-2","actionTypeId":"TRANSFORM_SCALE","config":{"delay":0,"easing":"ease","duration":350,"target":{"useEventTarget":"CHILDREN","selector":".img-thumbnail-bg","selectorGuids":["b159e67d-4b16-ccf4-b127-32a39d52112b"]},"xValue":1,"yValue":1,"locked":true}},{"id":"a-17-n-3","actionTypeId":"STYLE_OPACITY","config":{"delay":0,"easing":"ease","duration":350,"target":{"useEventTarget":"CHILDREN","selector":".c-img-thumb-overlay","selectorGuids":["b159e67d-4b16-ccf4-b127-32a39d521128"]},"value":0,"unit":""}},{"id":"a-17-n-4","actionTypeId":"STYLE_OPACITY","config":{"delay":0,"easing":"ease","duration":350,"target":{"useEventTarget":"CHILDREN","selector":".img-thumb-overlay-icon","selectorGuids":["b159e67d-4b16-ccf4-b127-32a39d521126"]},"value":0,"unit":""}},{"id":"a-17-n-5","actionTypeId":"TRANSFORM_SCALE","config":{"delay":0,"easing":"ease","duration":350,"target":{"useEventTarget":"CHILDREN","selector":".img-thumb-overlay-icon","selectorGuids":["b159e67d-4b16-ccf4-b127-32a39d521126"]},"xValue":0,"yValue":0,"locked":true}},{"id":"a-17-n-6","actionTypeId":"TRANSFORM_MOVE","config":{"delay":0,"easing":"ease","duration":350,"target":{"useEventTarget":"CHILDREN","selector":".img-thumb-overlay-text","selectorGuids":["b159e67d-4b16-ccf4-b127-32a39d521127"]},"yValue":100,"xUnit":"%","yUnit":"%","zUnit":"PX"}},{"id":"a-17-n-7","actionTypeId":"STYLE_OPACITY","config":{"delay":0,"easing":"ease","duration":350,"target":{"useEventTarget":"CHILDREN","selector":".img-thumb-overlay-text","selectorGuids":["b159e67d-4b16-ccf4-b127-32a39d521127"]},"value":0,"unit":""}}]}],"useFirstGroupAsInitialState":false,"createdOn":1603177528364},"a-18":{"id":"a-18","title":"Show Zoom IN Img","actionItemGroups":[{"actionItems":[{"id":"a-18-n","actionTypeId":"GENERAL_DISPLAY","config":{"delay":0,"easing":"","duration":0,"target":{"useEventTarget":"SIBLINGS","selector":".c-zoom-in-img","selectorGuids":["b159e67d-4b16-ccf4-b127-32a39d52112a"]},"value":"none"}},{"id":"a-18-n-2","actionTypeId":"STYLE_OPACITY","config":{"delay":0,"easing":"ease","duration":500,"target":{"useEventTarget":"SIBLINGS","selector":".c-zoom-in-img","selectorGuids":["b159e67d-4b16-ccf4-b127-32a39d52112a"]},"value":0,"unit":""}},{"id":"a-18-n-3","actionTypeId":"TRANSFORM_SCALE","config":{"delay":0,"easing":"ease","duration":350,"target":{"selector":"._w-zoom-in-img","selectorGuids":["b159e67d-4b16-ccf4-b127-32a39d521123"]},"xValue":0,"yValue":0,"locked":true}},{"id":"a-18-n-4","actionTypeId":"STYLE_OPACITY","config":{"delay":0,"easing":"ease","duration":350,"target":{"selector":"._w-zoom-in-img","selectorGuids":["b159e67d-4b16-ccf4-b127-32a39d521123"]},"value":0,"unit":""}},{"id":"a-18-n-5","actionTypeId":"TRANSFORM_MOVE","config":{"delay":0,"easing":"ease","duration":350,"target":{"selector":".zoom-out-text","selectorGuids":["b159e67d-4b16-ccf4-b127-32a39d521125"]},"yValue":100,"xUnit":"PX","yUnit":"%","zUnit":"PX"}},{"id":"a-18-n-6","actionTypeId":"STYLE_OPACITY","config":{"delay":0,"easing":"ease","duration":350,"target":{"selector":".zoom-out-text","selectorGuids":["b159e67d-4b16-ccf4-b127-32a39d521125"]},"value":0,"unit":""}}]},{"actionItems":[{"id":"a-18-n-7","actionTypeId":"GENERAL_DISPLAY","config":{"delay":0,"easing":"","duration":0,"target":{"useEventTarget":"SIBLINGS","selector":".c-zoom-in-img","selectorGuids":["b159e67d-4b16-ccf4-b127-32a39d52112a"]},"value":"block"}}]},{"actionItems":[{"id":"a-18-n-8","actionTypeId":"STYLE_OPACITY","config":{"delay":0,"easing":"ease","duration":350,"target":{"useEventTarget":"SIBLINGS","selector":".c-zoom-in-img","selectorGuids":["b159e67d-4b16-ccf4-b127-32a39d52112a"]},"value":1,"unit":""}}]},{"actionItems":[{"id":"a-18-n-9","actionTypeId":"TRANSFORM_SCALE","config":{"delay":0,"easing":"ease","duration":350,"target":{"selector":"._w-zoom-in-img","selectorGuids":["b159e67d-4b16-ccf4-b127-32a39d521123"]},"xValue":1,"yValue":1,"locked":true}},{"id":"a-18-n-10","actionTypeId":"STYLE_OPACITY","config":{"delay":0,"easing":"ease","duration":350,"target":{"selector":"._w-zoom-in-img","selectorGuids":["b159e67d-4b16-ccf4-b127-32a39d521123"]},"value":1,"unit":""}}]},{"actionItems":[{"id":"a-18-n-11","actionTypeId":"TRANSFORM_MOVE","config":{"delay":0,"easing":"ease","duration":350,"target":{"selector":".zoom-out-text","selectorGuids":["b159e67d-4b16-ccf4-b127-32a39d521125"]},"yValue":0,"xUnit":"PX","yUnit":"%","zUnit":"PX"}},{"id":"a-18-n-12","actionTypeId":"STYLE_OPACITY","config":{"delay":0,"easing":"ease","duration":350,"target":{"selector":".zoom-out-text","selectorGuids":["b159e67d-4b16-ccf4-b127-32a39d521125"]},"value":1,"unit":""}}]}],"useFirstGroupAsInitialState":true,"createdOn":1603180336911},"a-19":{"id":"a-19","title":"Hide Zoom IN Img","actionItemGroups":[{"actionItems":[{"id":"a-19-n","actionTypeId":"TRANSFORM_MOVE","config":{"delay":0,"easing":"ease","duration":350,"target":{"selector":".zoom-out-text","selectorGuids":["b159e67d-4b16-ccf4-b127-32a39d521125"]},"yValue":100,"xUnit":"PX","yUnit":"%","zUnit":"PX"}},{"id":"a-19-n-2","actionTypeId":"STYLE_OPACITY","config":{"delay":0,"easing":"ease","duration":350,"target":{"selector":".zoom-out-text","selectorGuids":["b159e67d-4b16-ccf4-b127-32a39d521125"]},"value":0,"unit":""}},{"id":"a-19-n-3","actionTypeId":"TRANSFORM_SCALE","config":{"delay":0,"easing":"ease","duration":350,"target":{"selector":"._w-zoom-in-img","selectorGuids":["b159e67d-4b16-ccf4-b127-32a39d521123"]},"xValue":0,"yValue":0,"locked":true}},{"id":"a-19-n-4","actionTypeId":"STYLE_OPACITY","config":{"delay":0,"easing":"ease","duration":350,"target":{"selector":"._w-zoom-in-img","selectorGuids":["b159e67d-4b16-ccf4-b127-32a39d521123"]},"value":0,"unit":""}}]},{"actionItems":[{"id":"a-19-n-5","actionTypeId":"STYLE_OPACITY","config":{"delay":0,"easing":"ease","duration":350,"target":{"useEventTarget":"PARENT","selector":".c-zoom-in-img","selectorGuids":["b159e67d-4b16-ccf4-b127-32a39d52112a"]},"value":0,"unit":""}}]},{"actionItems":[{"id":"a-19-n-6","actionTypeId":"GENERAL_DISPLAY","config":{"delay":0,"easing":"","duration":0,"target":{"useEventTarget":"PARENT","selector":".c-zoom-in-img","selectorGuids":["b159e67d-4b16-ccf4-b127-32a39d52112a"]},"value":"none"}}]}],"useFirstGroupAsInitialState":false,"createdOn":1603180336911},"a-20":{"id":"a-20","title":"Zoom IN HD Img","continuousParameterGroups":[{"id":"a-20-p","type":"MOUSE_X","parameterLabel":"Mouse X","continuousActionGroups":[{"keyframe":0,"actionItems":[{"id":"a-20-n","actionTypeId":"TRANSFORM_MOVE","config":{"delay":0,"easing":"","duration":500,"target":{"useEventTarget":"CHILDREN","selector":".c-hd-img","selectorGuids":["b159e67d-4b16-ccf4-b127-32a39d521129"]},"xValue":25,"xUnit":"%","yUnit":"PX","zUnit":"PX"}}]},{"keyframe":100,"actionItems":[{"id":"a-20-n-2","actionTypeId":"TRANSFORM_MOVE","config":{"delay":0,"easing":"","duration":500,"target":{"useEventTarget":"CHILDREN","selector":".c-hd-img","selectorGuids":["b159e67d-4b16-ccf4-b127-32a39d521129"]},"xValue":-25,"xUnit":"%","yUnit":"PX","zUnit":"PX"}}]}]},{"id":"a-20-p-2","type":"MOUSE_Y","parameterLabel":"Mouse Y","continuousActionGroups":[{"keyframe":0,"actionItems":[{"id":"a-20-n-3","actionTypeId":"TRANSFORM_MOVE","config":{"delay":0,"easing":"","duration":500,"target":{"useEventTarget":"CHILDREN","selector":".c-hd-img","selectorGuids":["b159e67d-4b16-ccf4-b127-32a39d521129"]},"yValue":25,"xUnit":"%","yUnit":"%","zUnit":"PX"}}]},{"keyframe":100,"actionItems":[{"id":"a-20-n-4","actionTypeId":"TRANSFORM_MOVE","config":{"delay":0,"easing":"","duration":500,"target":{"useEventTarget":"CHILDREN","selector":".c-hd-img","selectorGuids":["b159e67d-4b16-ccf4-b127-32a39d521129"]},"yValue":-25,"xUnit":"%","yUnit":"%","zUnit":"PX"}}]}]}],"createdOn":1603179440428},"a-21":{"id":"a-21","title":"Thumb Img Mouse IN 2","actionItemGroups":[{"actionItems":[{"id":"a-21-n","actionTypeId":"TRANSFORM_SCALE","config":{"delay":0,"easing":"ease","duration":350,"target":{"useEventTarget":"CHILDREN","selector":".c-img-thumbnail","selectorGuids":["b159e67d-4b16-ccf4-b127-32a39d52111a"]},"xValue":0.95,"yValue":0.95,"locked":true}},{"id":"a-21-n-2","actionTypeId":"TRANSFORM_SCALE","config":{"delay":0,"easing":"","duration":500,"target":{"useEventTarget":"CHILDREN","selector":".img-thumbnail-bg","selectorGuids":["b159e67d-4b16-ccf4-b127-32a39d52112b"]},"xValue":1,"yValue":1,"locked":true}},{"id":"a-21-n-3","actionTypeId":"STYLE_OPACITY","config":{"delay":0,"easing":"ease","duration":350,"target":{"useEventTarget":"CHILDREN","selector":".c-img-thumb-overlay","selectorGuids":["b159e67d-4b16-ccf4-b127-32a39d521128"]},"value":0,"unit":""}},{"id":"a-21-n-4","actionTypeId":"TRANSFORM_MOVE","config":{"delay":0,"easing":"ease","duration":350,"target":{"useEventTarget":"CHILDREN","selector":".img-thumb-overlay-text-2","selectorGuids":["5d7cc156-757b-2ffc-5db4-7b62a746ecd1"]},"yValue":0,"xUnit":"%","yUnit":"%","zUnit":"PX"}},{"id":"a-21-n-5","actionTypeId":"TRANSFORM_MOVE","config":{"delay":0,"easing":"","duration":500,"target":{"useEventTarget":"CHILDREN","selector":".img-thumb-overlay-text-2","selectorGuids":["5d7cc156-757b-2ffc-5db4-7b62a746ecd1"]},"yValue":100,"xUnit":"PX","yUnit":"%","zUnit":"PX"}},{"id":"a-21-n-6","actionTypeId":"STYLE_OPACITY","config":{"delay":0,"easing":"","duration":500,"target":{"useEventTarget":"CHILDREN","selector":".img-thumb-overlay-text-2","selectorGuids":["5d7cc156-757b-2ffc-5db4-7b62a746ecd1"]},"value":0,"unit":""}},{"id":"a-21-n-7","actionTypeId":"TRANSFORM_SCALE","config":{"delay":0,"easing":"ease","duration":350,"target":{"useEventTarget":"CHILDREN","selector":".img-thumb-overlay-icon","selectorGuids":["b159e67d-4b16-ccf4-b127-32a39d521126"]},"xValue":0,"yValue":0,"locked":true}},{"id":"a-21-n-8","actionTypeId":"STYLE_OPACITY","config":{"delay":0,"easing":"ease","duration":350,"target":{"useEventTarget":"CHILDREN","selector":".img-thumb-overlay-icon","selectorGuids":["b159e67d-4b16-ccf4-b127-32a39d521126"]},"value":0,"unit":""}}]},{"actionItems":[{"id":"a-21-n-9","actionTypeId":"TRANSFORM_SCALE","config":{"delay":0,"easing":"ease","duration":350,"target":{"useEventTarget":"CHILDREN","selector":".c-img-thumbnail","selectorGuids":["b159e67d-4b16-ccf4-b127-32a39d52111a"]},"xValue":1,"yValue":1,"locked":true}},{"id":"a-21-n-10","actionTypeId":"TRANSFORM_SCALE","config":{"delay":0,"easing":"ease","duration":350,"target":{"useEventTarget":"CHILDREN","selector":".img-thumbnail-bg","selectorGuids":["b159e67d-4b16-ccf4-b127-32a39d52112b"]},"xValue":0.95,"yValue":0.95,"locked":true}},{"id":"a-21-n-11","actionTypeId":"STYLE_OPACITY","config":{"delay":0,"easing":"ease","duration":350,"target":{"useEventTarget":"CHILDREN","selector":".c-img-thumb-overlay","selectorGuids":["b159e67d-4b16-ccf4-b127-32a39d521128"]},"value":1,"unit":""}},{"id":"a-21-n-12","actionTypeId":"STYLE_OPACITY","config":{"delay":200,"easing":"ease","duration":350,"target":{"useEventTarget":"CHILDREN","selector":".img-thumb-overlay-icon","selectorGuids":["b159e67d-4b16-ccf4-b127-32a39d521126"]},"value":1,"unit":""}},{"id":"a-21-n-13","actionTypeId":"TRANSFORM_SCALE","config":{"delay":200,"easing":"ease","duration":350,"target":{"useEventTarget":"CHILDREN","selector":".img-thumb-overlay-icon","selectorGuids":["b159e67d-4b16-ccf4-b127-32a39d521126"]},"xValue":1,"yValue":1,"locked":true}},{"id":"a-21-n-14","actionTypeId":"TRANSFORM_MOVE","config":{"delay":350,"easing":"ease","duration":350,"target":{"useEventTarget":"CHILDREN","selector":".img-thumb-overlay-text-2","selectorGuids":["5d7cc156-757b-2ffc-5db4-7b62a746ecd1"]},"yValue":0,"xUnit":"%","yUnit":"%","zUnit":"PX"}},{"id":"a-21-n-15","actionTypeId":"STYLE_OPACITY","config":{"delay":350,"easing":"ease","duration":350,"target":{"useEventTarget":"CHILDREN","selector":".img-thumb-overlay-text-2","selectorGuids":["5d7cc156-757b-2ffc-5db4-7b62a746ecd1"]},"value":1,"unit":""}}]}],"useFirstGroupAsInitialState":true,"createdOn":1603177528364},"a-22":{"id":"a-22","title":"Thumb Img Mouse OUT 2","actionItemGroups":[{"actionItems":[{"id":"a-22-n","actionTypeId":"TRANSFORM_SCALE","config":{"delay":0,"easing":"ease","duration":350,"target":{"useEventTarget":"CHILDREN","selector":".c-img-thumbnail","selectorGuids":["b159e67d-4b16-ccf4-b127-32a39d52111a"]},"xValue":0.95,"yValue":0.95,"locked":true}},{"id":"a-22-n-2","actionTypeId":"TRANSFORM_SCALE","config":{"delay":0,"easing":"ease","duration":350,"target":{"useEventTarget":"CHILDREN","selector":".img-thumbnail-bg","selectorGuids":["b159e67d-4b16-ccf4-b127-32a39d52112b"]},"xValue":1,"yValue":1,"locked":true}},{"id":"a-22-n-3","actionTypeId":"STYLE_OPACITY","config":{"delay":0,"easing":"ease","duration":350,"target":{"useEventTarget":"CHILDREN","selector":".c-img-thumb-overlay","selectorGuids":["b159e67d-4b16-ccf4-b127-32a39d521128"]},"value":0,"unit":""}},{"id":"a-22-n-4","actionTypeId":"STYLE_OPACITY","config":{"delay":0,"easing":"ease","duration":350,"target":{"useEventTarget":"CHILDREN","selector":".img-thumb-overlay-icon","selectorGuids":["b159e67d-4b16-ccf4-b127-32a39d521126"]},"value":0,"unit":""}},{"id":"a-22-n-5","actionTypeId":"TRANSFORM_SCALE","config":{"delay":0,"easing":"ease","duration":350,"target":{"useEventTarget":"CHILDREN","selector":".img-thumb-overlay-icon","selectorGuids":["b159e67d-4b16-ccf4-b127-32a39d521126"]},"xValue":0,"yValue":0,"locked":true}},{"id":"a-22-n-6","actionTypeId":"TRANSFORM_MOVE","config":{"delay":0,"easing":"ease","duration":350,"target":{"useEventTarget":"CHILDREN","selector":".img-thumb-overlay-text-2","selectorGuids":["5d7cc156-757b-2ffc-5db4-7b62a746ecd1"]},"yValue":100,"xUnit":"%","yUnit":"%","zUnit":"PX"}},{"id":"a-22-n-7","actionTypeId":"STYLE_OPACITY","config":{"delay":0,"easing":"ease","duration":350,"target":{"useEventTarget":"CHILDREN","selector":".img-thumb-overlay-text-2","selectorGuids":["5d7cc156-757b-2ffc-5db4-7b62a746ecd1"]},"value":0,"unit":""}}]}],"useFirstGroupAsInitialState":false,"createdOn":1603177528364},"slideInBottom":{"id":"slideInBottom","useFirstGroupAsInitialState":true,"actionItemGroups":[{"actionItems":[{"actionTypeId":"STYLE_OPACITY","config":{"delay":0,"duration":0,"target":{"id":"N/A","appliesTo":"TRIGGER_ELEMENT","useEventTarget":true},"value":0}}]},{"actionItems":[{"actionTypeId":"TRANSFORM_MOVE","config":{"delay":0,"duration":0,"target":{"id":"N/A","appliesTo":"TRIGGER_ELEMENT","useEventTarget":true},"xValue":0,"yValue":100,"xUnit":"PX","yUnit":"PX","zUnit":"PX"}}]},{"actionItems":[{"actionTypeId":"TRANSFORM_MOVE","config":{"delay":0,"easing":"outQuart","duration":1000,"target":{"id":"N/A","appliesTo":"TRIGGER_ELEMENT","useEventTarget":true},"xValue":0,"yValue":0,"xUnit":"PX","yUnit":"PX","zUnit":"PX"}},{"actionTypeId":"STYLE_OPACITY","config":{"delay":0,"easing":"outQuart","duration":1000,"target":{"id":"N/A","appliesTo":"TRIGGER_ELEMENT","useEventTarget":true},"value":1}}]}]}},"site":{"mediaQueries":[{"key":"main","min":992,"max":10000},{"key":"medium","min":768,"max":991},{"key":"small","min":480,"max":767},{"key":"tiny","min":0,"max":479}]}}
 );
