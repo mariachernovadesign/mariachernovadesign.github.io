@@ -83,7 +83,7 @@ a {
   grid-column-gap: 16px;
   grid-row-gap: 16px;
   justify-content: center;
-  margin-top: 21px;
+  margin-top: 32px;
   display: flex;
 }
 
@@ -1222,6 +1222,9 @@ a {
 
 .header-wrapper-flex {
   background-color: #fff;
+  background-image: url('../images/bg-2.png');
+  background-position: 0 0;
+  background-size: auto;
   flex: 1;
   justify-content: space-between;
   align-items: flex-start;
@@ -1268,14 +1271,15 @@ a {
 }
 
 .image-10 {
-  max-width: 90%;
+  max-width: 80%;
   opacity: 1;
   outline-offset: 0px;
   color: rgba(0, 0, 0, 0);
   text-align: right;
   border: 1px rgba(0, 0, 0, 0);
   outline: 3px rgba(0, 0, 0, 0);
-  margin-left: 57px;
+  margin-bottom: 0;
+  margin-left: 89px;
   padding-left: 0;
 }
 
@@ -1393,9 +1397,9 @@ a {
 .heading-9-cs {
   color: #e35252;
   text-align: left;
-  font-family: Noto Serif Display, sans-serif;
+  font-family: Rufina, sans-serif;
   font-size: 8vh;
-  font-weight: 500;
+  font-weight: 700;
   line-height: 120%;
 }
 
@@ -1411,10 +1415,10 @@ a {
 .heading-manrope {
   direction: ltr;
   color: #39885f;
-  text-align: center;
+  text-align: left;
   text-transform: none;
   margin-bottom: 12px;
-  font-family: Manrope, sans-serif;
+  font-family: Poppins, sans-serif;
   font-size: 18px;
   font-weight: 400;
   line-height: 106%;
@@ -1453,8 +1457,8 @@ a {
   color: rgba(0, 19, 9, .7);
   text-align: left;
   margin: 21px auto 0 0;
-  font-family: Manrope, sans-serif;
-  font-size: 19px;
+  font-family: Poppins, sans-serif;
+  font-size: 18px;
   font-weight: 400;
   line-height: 35px;
 }
@@ -1550,6 +1554,10 @@ a {
   padding-top: 0;
 }
 
+.image-15 {
+  text-align: right;
+}
+
 .container-image-cs {
   max-width: 1600px;
   text-align: center;
@@ -1569,13 +1577,13 @@ a {
 }
 
 .paragraph-case-study {
-  max-width: 1400px;
+  max-width: 1200px;
   float: none;
   color: rgba(0, 19, 9, .7);
   text-align: left;
   margin: 21px 0 0;
-  font-family: Manrope, sans-serif;
-  font-size: 16px;
+  font-family: Poppins, sans-serif;
+  font-size: 18px;
   font-weight: 400;
   line-height: 28px;
 }
@@ -1620,16 +1628,16 @@ a {
 .second-heading-cs {
   color: #e35252;
   text-align: left;
-  font-family: Noto Serif Display, sans-serif;
+  font-family: Rufina, sans-serif;
   font-size: 5vh;
-  font-weight: 500;
+  font-weight: 700;
   line-height: 120%;
 }
 
 .second-heading-cs.margin {
   text-align: center;
   margin-bottom: 32px;
-  padding-top: 32px;
+  padding-top: 40px;
 }
 
 .second-heading-cs.margin.left {
@@ -1785,7 +1793,8 @@ a {
 
 .video {
   z-index: auto;
-  max-width: 500px;
+  height: 50px;
+  max-width: 60%;
   float: none;
   clear: none;
   text-align: center;
@@ -1812,7 +1821,7 @@ a {
   text-transform: none;
   margin-bottom: 21px;
   margin-left: 0;
-  font-family: Manrope, sans-serif;
+  font-family: Poppins, sans-serif;
   font-size: 18px;
   font-weight: 400;
   line-height: 106%;
@@ -1832,7 +1841,7 @@ a {
 }
 
 .container-video {
-  max-width: 600px;
+  max-width: 45%;
   text-align: center;
   cursor: pointer;
   flex: 1;
@@ -1901,13 +1910,14 @@ a {
 }
 
 .image-17 {
+  max-width: 80%;
   text-align: left;
   padding-top: 21px;
 }
 
 .card-of-ca {
   max-width: 418px;
-  background-color: #ede9c0;
+  background-color: #e7e1ac;
   border-radius: 40px;
   margin-top: 32px;
   padding: 16px 26px;
@@ -1928,9 +1938,9 @@ a {
   color: #317250;
   text-align: left;
   margin-bottom: 0;
-  font-family: Noto Serif Display, sans-serif;
+  font-family: Rufina, sans-serif;
   font-size: 4vh;
-  font-weight: 500;
+  font-weight: 400;
 }
 
 .heading-13.tomato {
@@ -1939,11 +1949,14 @@ a {
 
 .heading-13.black {
   color: #000;
+  font-family: Rufina, sans-serif;
+  font-weight: 400;
 }
 
 .heading-13.craftsy-hd {
   color: #ee4e34;
   font-family: Poppins, sans-serif;
+  font-weight: 500;
 }
 
 .line {
@@ -2147,7 +2160,7 @@ a {
   color: #000;
   text-align: left;
   text-indent: -6px;
-  font-family: Noto Serif Display, sans-serif;
+  font-family: Rufina, sans-serif;
   font-size: 16vh;
   font-weight: 400;
 }
@@ -2156,14 +2169,14 @@ a {
   color: rgba(0, 19, 9, .7);
   text-align: right;
   margin-bottom: 21px;
-  font-family: Noto Serif Display, sans-serif;
-  font-size: 5vh;
-  font-weight: 500;
+  font-family: Rufina, sans-serif;
+  font-size: 6vh;
+  font-weight: 700;
 }
 
 .heading-20.manrope-medium {
   color: rgba(0, 19, 9, .7);
-  font-family: Manrope, sans-serif;
+  font-family: Montserrat, sans-serif;
   font-weight: 500;
 }
 
@@ -2177,30 +2190,30 @@ a {
 .heading-21 {
   color: rgba(0, 19, 9, .7);
   text-align: right;
-  font-family: Noto Serif Display, sans-serif;
-  font-size: 5vh;
+  font-family: Rufina, sans-serif;
+  font-size: 6vh;
   font-weight: 400;
 }
 
 .heading-21.manrope-regular {
   color: rgba(0, 19, 9, .7);
-  font-family: Manrope, sans-serif;
+  font-family: Montserrat, sans-serif;
   font-weight: 400;
 }
 
 .typography-2 {
   color: rgba(0, 19, 9, .7);
   text-align: left;
-  font-family: Manrope, sans-serif;
-  font-weight: 500;
+  font-family: Montserrat, sans-serif;
+  font-weight: 400;
 }
 
 .header-card-rounds {
   color: #317250;
   text-align: left;
-  font-family: Noto Serif Display, sans-serif;
+  font-family: Rufina, sans-serif;
   font-size: 4vh;
-  font-weight: 500;
+  font-weight: 700;
 }
 
 .image-20, .image-21 {
@@ -2231,6 +2244,7 @@ a {
 
 .image-32.margin-4.final-margin {
   margin-bottom: 160px;
+  left: 56px;
 }
 
 .link-block {
@@ -2351,6 +2365,14 @@ a {
   width: 100%;
   text-align: left;
   margin-top: 24px;
+}
+
+.bold-text-3, .bold-text-4 {
+  font-weight: 600;
+}
+
+.image-224, .image-225 {
+  max-width: 80%;
 }
 
 @media screen and (max-width: 991px) {
@@ -2485,8 +2507,8 @@ a {
 
   .image-2 {
     max-width: 320px;
-    top: -121px;
-    left: 11px;
+    top: -76px;
+    left: 246px;
   }
 
   ._w-card {
@@ -2645,7 +2667,7 @@ a {
   .image-10 {
     max-width: 100%;
     text-align: center;
-    margin-top: 32px;
+    margin-top: 40px;
     margin-left: 0;
   }
 
@@ -2655,7 +2677,7 @@ a {
   }
 
   .about-me {
-    text-align: center;
+    text-align: left;
   }
 
   .heading-9-about-me {
@@ -2686,7 +2708,7 @@ a {
 
   .heading-9-cs {
     font-size: 4vh;
-    font-weight: 500;
+    font-weight: 700;
   }
 
   .heading-manrope {
@@ -2747,7 +2769,11 @@ a {
 
   .second-heading-cs {
     font-size: 4vh;
-    font-weight: 500;
+    font-weight: 700;
+  }
+
+  .second-heading-cs.margin {
+    font-weight: 700;
   }
 
   .second-heading-cs-flexbox {
@@ -2765,6 +2791,14 @@ a {
 
   .heading-manrope-copy {
     font-size: 16px;
+  }
+
+  .heading-13, .heading-13.tomato, .heading-13.black {
+    font-weight: 700;
+  }
+
+  .heading-13.craftsy-hd {
+    font-weight: 500;
   }
 
   .image-18 {
@@ -2808,12 +2842,17 @@ a {
   .image-22 {
     float: right;
     margin-left: 40px;
+    margin-right: -5px;
     left: 39px;
   }
 
   .image-32 {
     margin-left: 0;
     left: -40px;
+  }
+
+  .image-32.margin-4.final-margin {
+    margin-left: -101px;
   }
 
   .link-block {
@@ -2829,6 +2868,10 @@ a {
     margin-left: 40px;
     left: 0;
   }
+
+  .image-224, .image-225 {
+    max-width: 100%;
+  }
 }
 
 @media screen and (max-width: 767px) {
@@ -2837,6 +2880,7 @@ a {
   }
 
   .container {
+    margin-right: 0;
     position: static;
   }
 
@@ -2870,7 +2914,7 @@ a {
     margin-left: 24px;
     margin-right: 24px;
     padding-left: 30px;
-    padding-right: 30px;
+    padding-right: 0;
   }
 
   .logo {
@@ -2966,6 +3010,11 @@ a {
     margin-top: -5px;
     position: relative;
     bottom: -3px;
+  }
+
+  .image-2 {
+    top: -72px;
+    left: 256px;
   }
 
   .c-card-title {
@@ -3111,7 +3160,7 @@ a {
   }
 
   .heading-9-cs {
-    text-align: center;
+    text-align: left;
     font-size: 5vh;
   }
 
@@ -3153,7 +3202,7 @@ a {
   .paragraph-case-study {
     text-align: left;
     font-size: 16px;
-    line-height: 32px;
+    line-height: 28px;
   }
 
   .paragraph-case-study.card {
@@ -3170,6 +3219,12 @@ a {
     text-align: left;
     margin-top: 21px;
     font-size: 4vh;
+    font-weight: 700;
+  }
+
+  .second-heading-cs.margin {
+    margin-top: 0;
+    padding-top: 0;
   }
 
   .container-cs {
@@ -3213,6 +3268,14 @@ a {
     position: relative;
   }
 
+  .image-17 {
+    max-width: 100%;
+  }
+
+  .card-of-ca.usability-study-card {
+    max-width: 421px;
+  }
+
   .heading-13 {
     font-size: 3vh;
   }
@@ -3227,12 +3290,19 @@ a {
     font-size: 8vh;
   }
 
+  .header-card-rounds {
+    font-family: Rufina, sans-serif;
+    font-size: 3vh;
+    font-weight: 700;
+  }
+
   .image-22 {
     margin-left: 30px;
   }
 
   .image-32 {
     margin-left: -60px;
+    left: 29px;
   }
 
   .paragraph-5 {
@@ -3265,7 +3335,7 @@ a {
 
   .hero {
     min-height: auto;
-    padding: 16px 16px 0;
+    padding: 16px 0 0;
   }
 
   .container {
@@ -3273,12 +3343,15 @@ a {
   }
 
   .container.flexbox {
+    text-align: left;
     flex-direction: column;
+    align-items: flex-start;
+    margin-left: 0;
   }
 
   .container.flexbox.margin {
     align-items: flex-start;
-    margin-top: 26px;
+    margin-top: 32px;
   }
 
   .hero-paragraph {
@@ -3291,6 +3364,8 @@ a {
   .hero-paragraph.main-page-paragraph {
     margin-top: -32px;
     margin-bottom: 8px;
+    font-size: 16px;
+    line-height: 26px;
   }
 
   .button {
@@ -3312,9 +3387,7 @@ a {
 
   .hero-wrap {
     background-position: 100% 60%;
-    padding-top: 120px;
-    padding-left: 20px;
-    padding-right: 20px;
+    padding: 120px 20px 40px;
   }
 
   .hero-heading {
@@ -3364,6 +3437,11 @@ a {
     padding-right: 20px;
   }
 
+  .section.bg-blur {
+    margin-left: 0;
+    margin-right: 0;
+  }
+
   .tag {
     font-size: 12.5px;
   }
@@ -3386,6 +3464,7 @@ a {
   }
 
   .whatido {
+    margin-top: 40px;
     margin-bottom: 0;
   }
 
@@ -3437,7 +3516,7 @@ a {
 
   .header {
     min-height: auto;
-    padding: 16px 16px 0;
+    padding: 0;
   }
 
   .header-paragraph.pages {
@@ -3527,9 +3606,9 @@ a {
   }
 
   .image-3 {
-    max-width: 114%;
-    margin-top: 18px;
-    margin-left: -33px;
+    max-width: 108%;
+    margin-top: 0;
+    margin-left: -31px;
     margin-right: 12px;
   }
 
@@ -3597,7 +3676,7 @@ a {
   }
 
   .div-block.typography {
-    text-align: center;
+    text-align: left;
     flex-direction: column;
     justify-content: space-around;
     align-items: flex-start;
@@ -3799,8 +3878,8 @@ a {
   }
 
   .section-case-study {
-    margin-left: 16px;
-    margin-right: 16px;
+    margin-left: 0;
+    margin-right: 0;
     padding: 21px 20px 32px;
   }
 
@@ -3809,7 +3888,8 @@ a {
   }
 
   .image-15 {
-    margin-left: -18px;
+    text-align: right;
+    margin-left: 0;
   }
 
   .container-image-cs {
@@ -3847,6 +3927,8 @@ a {
   }
 
   .container-cs {
+    flex-direction: column;
+    display: flex;
     position: static;
   }
 
@@ -3856,8 +3938,8 @@ a {
   }
 
   .section-case-study-copy {
-    margin-left: 16px;
-    margin-right: 16px;
+    margin-left: 0;
+    margin-right: 0;
     padding: 21px 20px 32px;
   }
 
@@ -3895,9 +3977,11 @@ a {
   }
 
   .arrow {
+    order: 0;
+    align-self: center;
     position: relative;
-    top: 132px;
-    left: -6px;
+    top: 9px;
+    left: 0;
     transform: rotate(90deg);
   }
 
@@ -3929,8 +4013,13 @@ a {
     text-align: left;
     text-indent: 0;
     margin-bottom: 0;
+    margin-left: 0;
     margin-right: 0;
     font-size: 6vh;
+  }
+
+  .typography.rufina {
+    margin-right: 65px;
   }
 
   .heading-20 {
@@ -3943,9 +4032,13 @@ a {
     font-size: 3vh;
   }
 
+  .heading-21.manrope-regular._88 {
+    margin-right: 7px;
+  }
+
   .typography-2 {
     margin-bottom: 0;
-    margin-left: -58px;
+    margin-left: 0;
   }
 
   .header-card-rounds {
@@ -3986,10 +4079,3 @@ a {
 }
 
 
-@font-face {
-  font-family: 'Satoshi';
-  src: url('../fonts/Satoshi-Medium.otf') format('opentype');
-  font-weight: 500;
-  font-style: normal;
-  font-display: swap;
-}
