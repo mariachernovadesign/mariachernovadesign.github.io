@@ -2254,6 +2254,12 @@ a {
   position: relative;
 }
 
+.link-block.yellow-link {
+  font-family: Poppins, sans-serif;
+  font-size: 18px;
+  font-weight: 600;
+}
+
 .div-block-2 {
   display: block;
 }
@@ -2801,6 +2807,10 @@ a {
     font-weight: 500;
   }
 
+  .arrow.cr-ar {
+    left: -15px;
+  }
+
   .image-18 {
     max-width: 140%;
   }
@@ -3014,7 +3024,7 @@ a {
 
   .image-2 {
     top: -72px;
-    left: 256px;
+    left: 19px;
   }
 
   .c-card-title {
@@ -3052,6 +3062,7 @@ a {
 
   .icon {
     color: #2e2e2e;
+    margin-top: -10px;
     font-size: 28px;
   }
 
@@ -3335,7 +3346,7 @@ a {
 
   .hero {
     min-height: auto;
-    padding: 16px 0 0;
+    padding: 0;
   }
 
   .container {
@@ -3381,8 +3392,12 @@ a {
 
   .button-wrapper {
     margin-top: 0;
-    margin-bottom: 20px;
+    margin-bottom: 0;
     padding-bottom: 44px;
+  }
+
+  .button-wrapper.main-button {
+    margin-bottom: 26px;
   }
 
   .hero-wrap {
@@ -3443,6 +3458,7 @@ a {
   }
 
   .tag {
+    border-radius: 5px;
     font-size: 12.5px;
   }
 
@@ -3610,6 +3626,7 @@ a {
     margin-top: 0;
     margin-left: -31px;
     margin-right: 12px;
+    padding-top: 0;
   }
 
   .paragraph, .paragraph-2 {
@@ -3626,6 +3643,7 @@ a {
 
   .icon {
     color: #2e2e2e;
+    margin-top: -13px;
   }
 
   .image-4 {
@@ -3833,7 +3851,7 @@ a {
   }
 
   .heading-9-cs {
-    text-align: center;
+    text-align: left;
     font-size: 4vh;
     font-weight: 500;
     line-height: 130%;
@@ -3986,7 +4004,7 @@ a {
   }
 
   .arrow.cr-ar {
-    top: 106px;
+    top: 13px;
   }
 
   .image-18 {
