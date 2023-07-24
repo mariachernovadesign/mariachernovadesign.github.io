@@ -3952,7 +3952,7 @@ a {
   }
 
   .hero-heading.gradient {
-    padding-bottom: 24px;
+    padding-bottom: 0;
     font-size: 44px;
   }
 
@@ -4630,7 +4630,7 @@ a {
     margin-bottom: 0;
     padding-top: 0;
     padding-bottom: 0;
-    font-size: 40px;
+    font-size: 32px;
     line-height: 120%;
   }
 
@@ -5119,7 +5119,7 @@ a {
 
   .heading-9-cs {
     text-align: left;
-    font-size: 4vh;
+    font-size: 32px;
     font-weight: 400;
     line-height: 130%;
   }
