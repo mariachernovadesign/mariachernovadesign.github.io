@@ -402,7 +402,7 @@ a {
   color: var(--grey);
   padding-bottom: 0;
   font-family: Golos Text, sans-serif;
-  font-size: 24px;
+  font-size: 21px;
   font-weight: 400;
 }
 
@@ -423,7 +423,7 @@ a {
   padding-left: 0;
   padding-right: 0;
   font-family: Golos Text, sans-serif;
-  font-size: 21px;
+  font-size: 18px;
   font-weight: 500;
   transition-duration: .3s;
   display: inline-block;
@@ -548,6 +548,12 @@ a {
 
 .section.cards {
   text-align: center;
+}
+
+.section.about-me {
+  margin-top: 0;
+  margin-bottom: 0;
+  padding-bottom: 40px;
 }
 
 .project {
@@ -772,6 +778,13 @@ a {
 .header-paragraph.pages {
   margin-top: 21px;
   padding-bottom: 30px;
+}
+
+.header-paragraph.flex {
+  justify-content: flex-start;
+  align-items: center;
+  max-width: 60%;
+  margin-top: 8px;
 }
 
 .screen-container {
@@ -1126,8 +1139,9 @@ a {
 }
 
 .paragraph {
+  color: var(--grey);
   margin-bottom: 0;
-  font-family: Poppins, sans-serif;
+  font-family: Golos Text, sans-serif;
   font-size: 21px;
   font-weight: 400;
   line-height: 180%;
@@ -1136,6 +1150,14 @@ a {
 .paragraph.abme {
   margin-top: 16px;
   font-size: 21px;
+}
+
+.paragraph.left {
+  text-align: left;
+  align-self: flex-start;
+  max-width: 100%;
+  min-height: 100%;
+  max-height: 100%;
 }
 
 .paragraph-2 {
@@ -1178,7 +1200,7 @@ a {
 }
 
 .body-2 {
-  background-color: #9205ff30;
+  background-color: var(--lemon-sorbet);
 }
 
 .heading-9 {
@@ -2889,6 +2911,11 @@ a {
   top: 290%;
 }
 
+.image-222.absolute {
+  position: absolute;
+  top: 290%;
+}
+
 .image-223 {
   border-radius: 20px;
 }
@@ -3972,6 +3999,7 @@ a {
 }
 
 .container-4.images {
+  flex-flow: row;
   justify-content: center;
   align-items: center;
   max-width: 229%;
@@ -3990,11 +4018,11 @@ a {
   grid-template-columns: 1fr;
   grid-auto-columns: 1fr;
   grid-auto-flow: column;
-  justify-content: space-between;
+  justify-content: center;
   align-self: stretch;
   place-items: center stretch;
-  min-width: 1400px;
-  max-width: 2000px;
+  max-width: 1600px;
+  max-height: 1200px;
   margin-top: 140px;
   margin-right: 0;
   display: flex;
@@ -4147,11 +4175,11 @@ a {
   display: flex;
 }
 
-.iphone-video-wrapper {
+.iphone-video-er {
   border-radius: 3.6rem;
-  width: 92%;
-  height: 97%;
-  margin: auto;
+  width: 100%;
+  height: 100%;
+  margin: 20px auto 0;
   position: absolute;
   inset: 0%;
   overflow: hidden;
@@ -4170,9 +4198,10 @@ a {
   inset: 0% 0% 0% auto;
 }
 
-.iphone-video-container {
+.iphone-video-co {
   background-color: #000;
   border-radius: 1.4rem;
+  align-self: auto;
   width: 100%;
   height: 100%;
   position: relative;
@@ -4202,7 +4231,7 @@ a {
   position: relative;
 }
 
-.iphone {
+.ip {
   z-index: 0;
   flex-flow: row;
   justify-content: flex-end;
@@ -4229,7 +4258,9 @@ a {
   color: #0000001f;
   object-fit: contain;
   width: 100%;
+  max-width: 600px;
   position: relative;
+  overflow: clip;
 }
 
 .videos-sub-dropdown-toggle {
@@ -4333,10 +4364,11 @@ a {
   inset: auto 0% 6%;
 }
 
-.iphone-video-list {
+.ip-vid-li {
   background-color: #000;
+  flex-flow: row;
   justify-content: center;
-  align-items: center;
+  align-items: flex-end;
   width: 100%;
   height: 100%;
   display: flex;
@@ -4383,9 +4415,17 @@ a {
 }
 
 .iphone-wrapper {
+  grid-column-gap: 16px;
+  grid-row-gap: 16px;
   color: #fff;
+  flex-flow: column;
+  flex: 0 auto;
+  grid-template-rows: auto auto;
+  grid-template-columns: 1fr 1fr;
+  grid-auto-columns: 1fr;
   width: 90%;
-  max-width: 1080px;
+  max-width: 600px;
+  display: block;
   position: relative;
 }
 
@@ -4462,12 +4502,21 @@ a {
   max-height: 70%;
 }
 
-.iphone-2, .iphone-3 {
+.iphone-2 {
   z-index: 0;
   justify-content: center;
   align-items: center;
   display: flex;
   position: relative;
+}
+
+.iphone {
+  z-index: 0;
+  justify-content: center;
+  align-items: center;
+  display: flex;
+  position: relative;
+  overflow: visible;
 }
 
 .img400 {
@@ -4490,6 +4539,124 @@ a {
   max-width: 30%;
   position: absolute;
   inset: 0% 0% auto auto;
+}
+
+.section-3, .section-4 {
+  background-color: #fdfdfd;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Oxygen, Ubuntu, Cantarell, Fira Sans, Droid Sans, Helvetica Neue, sans-serif;
+  display: flex;
+}
+
+.video-2 {
+  flex: 0 auto;
+  align-self: center;
+  min-height: 105%;
+  max-height: 110%;
+  top: 10px;
+}
+
+.iphone-video-wrapper-2 {
+  border-radius: 3.6rem;
+  width: 92%;
+  height: 97%;
+  margin: auto;
+  position: absolute;
+  inset: 0%;
+  overflow: hidden;
+}
+
+.iphone-video-container-2 {
+  background-color: #000;
+  border-radius: 1.4rem;
+  width: 100%;
+  height: 100%;
+  position: relative;
+  overflow: hidden;
+}
+
+.iphone-video-list-2 {
+  background-color: #000;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  position: relative;
+}
+
+.iphone-video-wrapper {
+  border-radius: 3.6rem;
+  width: 92%;
+  height: 97%;
+  margin: auto;
+  position: absolute;
+  inset: 0%;
+  overflow: hidden;
+}
+
+.iphone-video-container {
+  background-color: #000;
+  border-radius: 1.4rem;
+  width: 100%;
+  height: 100%;
+  position: relative;
+  overflow: hidden;
+}
+
+.iphone-video-list {
+  background-color: #000;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  position: relative;
+}
+
+.video-3 {
+  float: none;
+  max-width: 600px;
+  margin-top: 0;
+  position: static;
+}
+
+.video-4 {
+  max-width: 600px;
+  max-height: 1200px;
+}
+
+.image-802 {
+  max-width: 60%;
+}
+
+.hero-img {
+  grid-column-gap: 0px;
+  grid-row-gap: 0px;
+  flex-flow: column;
+  justify-content: flex-start;
+  align-items: flex-start;
+  display: flex;
+}
+
+.flex {
+  grid-column-gap: 40px;
+  grid-row-gap: 40px;
+  justify-content: space-between;
+  align-items: flex-start;
+  max-width: 1600px;
+  display: flex;
+}
+
+.image-803 {
+  max-width: 90%;
+  margin-top: 40px;
+}
+
+.bold-text-17, .bold-text-18 {
+  font-weight: 600;
 }
 
 @media screen and (max-width: 991px) {
@@ -5774,7 +5941,7 @@ a {
     height: 90vh;
   }
 
-  .iphone-video-wrapper {
+  .iphone-video-er, .iphone-video-wrapper-2, .iphone-video-wrapper {
     border-radius: 3.1rem;
   }
 }
@@ -5980,6 +6147,10 @@ a {
     padding-right: 0;
   }
 
+  .section.about-me {
+    padding-left: 0;
+  }
+
   .left-column {
     text-align: center;
     align-self: flex-start;
@@ -6080,6 +6251,11 @@ a {
   .header-paragraph.pages {
     font-size: 16px;
     line-height: 26px;
+  }
+
+  .header-paragraph.flex {
+    max-width: 100%;
+    margin-top: 0;
   }
 
   .screen-image {
@@ -6396,7 +6572,7 @@ a {
 
   .header-wrapper-cs.spaces {
     margin-top: 0;
-    padding-top: 60px;
+    padding-top: 0;
   }
 
   .heading-9-cs {
@@ -6411,7 +6587,7 @@ a {
   }
 
   .heading-9-cs.spaces {
-    font-size: 28px;
+    font-size: 32px;
   }
 
   .heading-manrope {
@@ -6441,7 +6617,7 @@ a {
 
   .header-paragraph-case-study {
     margin-top: 16px;
-    font-size: 15px;
+    font-size: 16px;
     line-height: 28px;
   }
 
@@ -6477,10 +6653,14 @@ a {
   .section-case-study.spaces-container.mission {
     justify-content: center;
     align-items: flex-start;
-    padding-left: 30px;
+    padding-left: 0;
   }
 
   .section-case-study.spaces-container.black.imgbg {
+    background-image: none;
+    background-position: 0 0;
+    background-repeat: repeat;
+    background-size: auto;
     flex-flow: column;
     padding-bottom: 40px;
   }
@@ -6597,7 +6777,8 @@ a {
     justify-content: space-between;
     align-self: center;
     align-items: center;
-    min-width: 100%;
+    min-width: 80%;
+    margin-right: 0;
   }
 
   .second-heading-cs-flexbox {
@@ -6759,6 +6940,10 @@ a {
     max-width: 100%;
   }
 
+  .image-222.absolute {
+    max-width: 0%;
+  }
+
   .button-footer {
     text-align: left;
     justify-content: flex-start;
@@ -6902,6 +7087,13 @@ a {
     padding-top: 0;
   }
 
+  .quick-stack-2.mission {
+    align-self: flex-start;
+    max-width: 2000px;
+    margin-left: 16px;
+    margin-right: 16px;
+  }
+
   .image-230 {
     max-width: 100%;
     margin-left: 0;
@@ -6960,7 +7152,7 @@ a {
     margin-top: 32px;
   }
 
-  .iphone {
+  .ip {
     flex-flow: row;
     justify-content: center;
     align-items: flex-start;
@@ -6973,10 +7165,31 @@ a {
     max-height: 200%;
   }
 
+  .iphone {
+    max-width: 390px;
+  }
+
   .img400 {
     max-width: 35%;
     position: relative;
     inset: auto auto 160px;
+  }
+
+  .image-802 {
+    max-width: 200%;
+    margin-left: -100%;
+    position: relative;
+  }
+
+  .flex {
+    grid-column-gap: 24px;
+    grid-row-gap: 24px;
+    flex-flow: column;
+  }
+
+  .image-803 {
+    max-width: 100%;
+    margin-top: 24px;
   }
 }
 
